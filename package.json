@@ -8,7 +8,9 @@
     "check": "tsc --noEmit",
     "start": "node dist/server.js",
     "run:once": "node dist/jobs/harvest.js",
-    "dev": "tsx watch src/server.ts"
+    "dev": "tsx watch src/server.ts",
+    "setup-db": "node setup-db.js",
+    "harvest": "tsx src/jobs/harvest.ts"
   },
   "dependencies": {
     "cheerio": "^1.0.0-rc.12",
