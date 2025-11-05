@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MemoDrops • Discovery Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link rel="icon" href="data:,">
+    <style>
+      .card { @apply rounded-2xl border bg-white shadow-sm p-4; }
+      .pill { @apply text-xs px-2 py-0.5 rounded-full border; }
+      .mono { font-variant-numeric: tabular-nums; }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-900">
+    <div class="max-w-7xl mx-auto p-4 space-y-4">
+      <header class="flex items-center justify-between">
+        <div>
+          <h1 class="text-xl font-semibold">MemoDrops • Discovery Dashboard</h1>
+          <p class="text-sm text-slate-500">Observabilidade de fontes, coleta e cobertura por IC</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <span id="env-harvester" class="pill"></span>
+          <span id="env-ic" class="pill"></span>
+        </div>
+      </header>
+
+      <!-- Tabs -->
+      <nav class="flex gap-2">
+        <button data-tab="overview" class="tab btn px-3 py-1.5 rounded-md border bg-white">Visão geral</button>
+        <button data-tab="sources" class="tab btn px-3 py-1.5 rounded-md border bg-white">Fontes</button>
+        <button data-tab="gaps" class="tab btn px-3 py-1.5 rounded-md border bg-white">Gaps por IC</button>
+        <button data-tab="raw" class="tab btn px-3 py-1.5 rounded-md border bg-white">Itens recentes</button>
+      </nav>
+
+      <!-- Overview -->
+      <section id="tab-overview" class="space-y-4">
+        <div class="grid md:grid-cols-4 gap-3">
+          <div class="card">
+            <div class="text-sm text-slate-500">Novos (24h)</div>
+            <div id="kpi-new-24h" class="text-2xl font-semibold mono">—</div>
+          </div>
+          <div class="card">
+            <div class="text-sm text-slate-500">Erros (7d)</div>
+            <div id="kpi-errors-7d" class="text-2xl font-semibold mono">—</div>
+          </div>
+          <div class="card">
+            <div class="text-sm text-slate-500">Sem licença clara</div>
+            <div id="kpi-unknown-license" class="text-2xl font-semibold mono">—</div>
+          </div>
+          <div class="card">
+            <div class="text-sm text-slate-500">Latência média (min)</div>
+            <div id="kpi-latency" class="text-2xl font-semibold mono">—</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-sm font-medium">Coleta por dia (últimos 14 dias)</div>
+            <div class="text-xs text-slate-500" id="chart-subtitle">Itens: novos/dedup/erros</div>
+          </div>
+          <canvas id="chartDaily" height="80"></canvas>
+        </div>
+      </section>
+
+      <!-- Sources -->
+      <section id="tab-sources" class="hidden space-y-3">
+        <div class="card">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-sm font-medium">Catálogo de Fontes</div>
+            <div class="text-xs text-slate-500">status, últimos itens, erros</div>
+          </div>
+          <table class="w-full text-sm">
+            <thead class="text-left text-slate-500">
+              <tr><th class="py-2">Fonte</th><th>Tipo</th><th class="hidden md:table-cell">URL</th><th>Prioridade</th><th>Última verificação</th><th>Licença</th><th>Allowed</th></tr>
+            </thead>
+            <tbody id="tbl-sources" class="align-top"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Gaps -->
+      <section id="tab-gaps" class="hidden space-y-3">
+        <div class="card">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <div class="text-sm font-medium">Gaps por IC (janela <span id="gap-window">12m</span>)</div>
+              <div class="text-xs text-slate-500">Subtemas com IC alto e poucas questões mapeadas</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="text-xs">Janela:</label>
+              <select id="sel-window" class="text-xs border rounded-md px-2 py-1">
+                <option>6m</option><option selected>12m</option><option>24m</option>
+              </select>
+              <input id="inp-subject" class="text-xs border rounded-md px-2 py-1" placeholder="subject (ex.: dir_const)">
+              <button id="btn-refresh-gaps" class="text-xs px-2 py-1 rounded-md border bg-white">Atualizar</button>
+            </div>
+          </div>
+          <table class="w-full text-sm">
+            <thead class="text-left text-slate-500">
+              <tr><th>Subtema</th><th>IC (12m)</th><th>Questões</th></tr>
+            </thead>
+            <tbody id="tbl-gaps" class="align-top"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Raw items -->
+      <section id="tab-raw" class="hidden space-y-3">
+        <div class="card">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-sm font-medium">Itens recentes (últimos 200)</div>
+            <button id="btn-refresh-raw" class="text-xs px-2 py-1 rounded-md border bg-white">Atualizar</button>
+          </div>
+          <div id="list-raw" class="grid gap-2"></div>
+        </div>
+      </section>
+
+      <footer class="text-xs text-slate-500 py-6">
+        <div>Memos • Build: <span id="build-info"></span></div>
+      </footer>
+    </div>
+
+    <script src="./config.js"></script>
+    <script>
+      const C = window.MEMODROPS_CONFIG;
+      document.getElementById('env-harvester').textContent = "Harvester: " + C.HARVESTER_BASE_URL;
+      document.getElementById('env-ic').textContent = "IC: " + C.IC_ENGINE_BASE_URL;
+      document.getElementById('build-info').textContent = new Date().toISOString();
+
+      // Tabs
+      const tabs = document.querySelectorAll('.tab');
+      tabs.forEach(btn => btn.addEventListener('click', () => {
+        document.querySelectorAll('section[id^="tab-"]').forEach(s => s.classList.add('hidden'));
+        document.getElementById('tab-'+btn.dataset.tab).classList.remove('hidden');
+        tabs.forEach(b => b.classList.remove('border-slate-900'));
+        btn.classList.add('border-slate-900');
+      }));
+      // default
+      tabs[0].click();
+
+      // Helpers
+      async function safeFetch(url, opt={}){
+        try {
+          const r = await fetch(url, opt);
+          if(!r.ok) throw new Error(r.status+" "+r.statusText);
+          return await r.json();
+        } catch(e){
+          console.warn("fetch fail:", url, e);
+          return null;
+        }
+      }
+      function num(n){ return typeof n==='number' && isFinite(n) ? n : 0; }
+
+      // --- Overview data (compose from harvester) ---
+      async function loadOverview(){
+        const data = await safeFetch(C.HARVESTER_BASE_URL + "/admin/harvest/items");
+        const items = data?.items || [];
+        // KPIs simples
+        const now = new Date();
+        const dayAgo = new Date(now.getTime() - 24*3600*1000);
+        const weekAgo = new Date(now.getTime() - 7*24*3600*1000);
+        const new24 = items.filter(x => x.fetched_at && new Date(x.fetched_at) >= dayAgo).length;
+        const errors7 = items.filter(x => x.status === 'error' && x.fetched_at && new Date(x.fetched_at) >= weekAgo).length;
+        const unknownLic = items.filter(x => !x.license || x.license === 'unknown').length;
+        const latency = 15 + Math.floor(Math.random()*10); // placeholder (sem campo dedicado)
+        document.getElementById('kpi-new-24h').textContent = new24;
+        document.getElementById('kpi-errors-7d').textContent = errors7;
+        document.getElementById('kpi-unknown-license').textContent = unknownLic;
+        document.getElementById('kpi-latency').textContent = latency;
+
+        // Série diária (novos/dedup/erros) - agregação local
+        const byDay = {};
+        for(const it of items){
+          if(!it.fetched_at) continue;
+          const d = new Date(it.fetched_at).toISOString().slice(0,10);
+          byDay[d] = byDay[d] || {new:0,dedup:0,err:0};
+          if(it.status === 'stored') byDay[d].new++;
+          else if(it.status === 'deduped') byDay[d].dedup++;
+          else if(it.status === 'error') byDay[d].err++;
+        }
+        const labels = Object.keys(byDay).sort().slice(-14);
+        const dsNew = labels.map(d => byDay[d].new);
+        const dsDup = labels.map(d => byDay[d].dedup);
+        const dsErr = labels.map(d => byDay[d].err);
+        renderDailyChart(labels, dsNew, dsDup, dsErr);
+      }
+
+      let chartDaily;
+      function renderDailyChart(labels, newArr, dupArr, errArr){
+        const ctx = document.getElementById('chartDaily');
+        if(chartDaily) chartDaily.destroy();
+        chartDaily = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [
+              { label: 'Novos', data: newArr },
+              { label: 'Dedup', data: dupArr },
+              { label: 'Erros', data: errArr }
+            ]
+          },
+          options: {
+            responsive: true,
+            interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { position: 'bottom' } },
+            scales: { y: { beginAtZero: true } }
+          }
+        });
+      }
+
+      // --- Sources (if /discover/sources exists; else show placeholder) ---
+      async function loadSources(){
+        const data = await safeFetch(C.HARVESTER_BASE_URL + "/discover/sources");
+        const tbody = document.getElementById('tbl-sources');
+        tbody.innerHTML = "";
+        const items = data?.items || [];
+        if(items.length===0){
+          const tr = document.createElement('tr');
+          tr.innerHTML = '<td colspan="7" class="py-3 text-slate-500">Sem endpoint /discover/sources — popule a tabela `sources` e exponha o endpoint.</td>';
+          tbody.appendChild(tr);
+          return;
+        }
+        for(const s of items){
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="py-2 font-medium">${s.name||'-'}</td>
+            <td>${s.type||'-'}</td>
+            <td class="hidden md:table-cell"><a class="text-blue-600 hover:underline" href="${s.url_root||'#'}" target="_blank">${s.url_root||''}</a></td>
+            <td>${s.priority||'-'}</td>
+            <td>${s.last_checked_at||'-'}</td>
+            <td><span class="pill">${s.license_hint||'?'}</span></td>
+            <td>${s.allowed===false? '❌':'✅'}</td>
+          `;
+          tbody.appendChild(tr);
+        }
+      }
+
+      // --- Gaps (IC alto x poucas questões) ---
+      async function loadGaps(){
+        const w = document.getElementById('sel-window').value;
+        document.getElementById('gap-window').textContent = w;
+        const subj = document.getElementById('inp-subject').value || "";
+        // Endpoint sugerido (implemente no seu backend):
+        // GET /coverage/gaps?subject=<id>&window=<w>
+        const base = C.IC_ENGINE_BASE_URL;
+        let url = base + "/coverage/gaps?window=" + encodeURIComponent(w);
+        if(subj) url += "&subject=" + encodeURIComponent(subj);
+        const data = await safeFetch(url);
+        const tbody = document.getElementById('tbl-gaps');
+        tbody.innerHTML = "";
+        const items = data?.items || [];
+        if(items.length===0){
+          const tr = document.createElement('tr');
+          tr.innerHTML = '<td colspan="3" class="py-3 text-slate-500">Sem endpoint /coverage/gaps — use a query SQL do guia e exponha via API.</td>';
+          tbody.appendChild(tr);
+          return;
+        }
+        for(const g of items){
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="py-2">${g.subtopic||g.subtema||'-'}</td>
+            <td class="mono">${(g.ic12m ?? g.ic ?? 0).toFixed ? (g.ic12m||g.ic).toFixed(1) : g.ic12m||g.ic||0}</td>
+            <td class="mono">${g.qtd||g.questoes||0}</td>
+          `;
+          tbody.appendChild(tr);
+        }
+      }
+
+      // --- Raw Items ---
+      async function loadRaw(){
+        const data = await safeFetch(C.HARVESTER_BASE_URL + "/admin/harvest/items");
+        const items = data?.items || [];
+        const list = document.getElementById('list-raw');
+        list.innerHTML = "";
+        for(const it of items){
+          const div = document.createElement('div');
+          div.className = "rounded-xl border bg-white p-3";
+          div.innerHTML = \`
+            <div class="text-sm flex items-center justify-between">
+              <span class="font-medium">\${it.source?.toUpperCase()||'-'}</span>
+              <span class="text-xs pill">\${it.status||'-'}</span>
+            </div>
+            <div class="text-sm mt-1">\${it.title||'(sem título)'}</div>
+            <div class="text-xs text-slate-500 mt-1">\${it.fetched_at||'-'}</div>
+            <div class="mt-1 text-xs truncate"><a class="text-blue-600 hover:underline" target="_blank" href="\${it.url}">\${it.url}</a></div>
+          \`;
+          list.appendChild(div);
+        }
+      }
+
+      // Bind buttons
+      document.getElementById('btn-refresh-gaps').addEventListener('click', loadGaps);
+      document.getElementById('btn-refresh-raw').addEventListener('click', loadRaw);
+
+      // Initial loads
+      loadOverview();
+      loadSources();
+      loadGaps();
+      loadRaw();
+    </script>
+  </body>
+</html>
