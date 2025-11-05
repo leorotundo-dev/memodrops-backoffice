@@ -8,7 +8,9 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(express.json());
-app.use(express.static('public'));
+// Serve static files from public directory
+const publicPath = process.env.NODE_ENV === 'production' ? 'dist/public' : 'public';
+app.use(express.static(publicPath));
 
 // Health check
 app.get('/health', (req, res) => {
