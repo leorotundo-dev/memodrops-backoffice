@@ -3,6 +3,7 @@ import express from 'express';
 import { runAll } from './jobs/harvest.js';
 import { query } from './db/index.js';
 import { calculateIC, getTopicGaps } from './ic-engine/calculator.js';
+import { setupRouter } from './setup-endpoint.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -16,6 +17,9 @@ app.use(express.static(publicPath));
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'memodrops-backoffice' });
 });
+
+// Setup endpoints
+app.use(setupRouter);
 
 // ============================================================================
 // HARVESTER ADMIN ENDPOINTS

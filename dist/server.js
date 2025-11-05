@@ -3,14 +3,19 @@ import express from 'express';
 import { runAll } from './jobs/harvest.js';
 import { query } from './db/index.js';
 import { calculateIC, getTopicGaps } from './ic-engine/calculator.js';
+import { setupRouter } from './setup-endpoint.js';
 const app = express();
 const PORT = process.env.PORT || 3001;
 app.use(express.json());
-app.use(express.static('public'));
+// Serve static files from public directory
+const publicPath = process.env.NODE_ENV === 'production' ? 'dist/public' : 'public';
+app.use(express.static(publicPath));
 // Health check
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', service: 'memodrops-backoffice' });
 });
+// Setup endpoints
+app.use(setupRouter);
 // ============================================================================
 // HARVESTER ADMIN ENDPOINTS
 // ============================================================================
