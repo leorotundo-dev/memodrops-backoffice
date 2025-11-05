@@ -4,6 +4,7 @@ import { runAll } from './jobs/harvest.js';
 import { query } from './db/index.js';
 import { calculateIC, getTopicGaps } from './ic-engine/calculator.js';
 import { setupRouter } from './setup-endpoint.js';
+import { autoSetupDatabase } from './db/auto-setup.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -181,11 +182,14 @@ app.get('/discover/sources', async (req, res) => {
 // START SERVER
 // ============================================================================
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log('========================================');
   console.log('🚀 MemoDrops Backoffice');
   console.log('========================================');
   console.log(`Server: http://localhost:${PORT}`);
   console.log(`Health: http://localhost:${PORT}/health`);
   console.log('========================================');
+  
+  // Auto-setup database on first run
+  await autoSetupDatabase();
 });
