@@ -94,7 +94,9 @@ export async function processEdital(editalId: number): Promise<void> {
     }
 
     // Extrair conteúdo programático com IA
+    console.log(`[EditalParser] Calling extractSubjectsFromEdital with ${editalText.length} chars`);
     const subjects = await extractSubjectsFromEdital(editalText);
+    console.log(`[EditalParser] Extracted ${subjects.length} subjects`);
 
     // Salvar matérias, tópicos e subtópicos no banco
     for (let i = 0; i < subjects.length; i++) {
@@ -124,6 +126,8 @@ export async function processEdital(editalId: number): Promise<void> {
  * Extrai matérias e tópicos do texto do edital usando IA
  */
 async function extractSubjectsFromEdital(editalText: string): Promise<ExtractedSubject[]> {
+  console.log(`[extractSubjectsFromEdital] Starting with ${editalText.length} chars`);
+  
   // Se o texto for muito longo, dividir em chunks
   if (editalText.length > 15000) {
     console.log(`[EditalParser] Text is long (${editalText.length} chars), using chunking strategy`);
