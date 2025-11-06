@@ -75,21 +75,37 @@ export async function processEdital(editalId: number): Promise<void> {
     // Extrair texto do PDF se fileUrl estiver disponível
     let editalText = edital.original_text || '';
     
-    if (edital.file_url && edital.file_url.includes('/uploads/')) {
+    if (edital.file_url && !editalText) {
       try {
-        // Construir caminho local do arquivo
-        const filename = edital.file_url.split('/uploads/')[1];
-        const localPath = `/tmp/editals/${filename}`;
+        console.log(`[EditalParser] Downloading PDF from: ${edital.file_url}`);
         
-        console.log(`[EditalParser] Extracting text from PDF: ${localPath}`);
-        const fullText = await extractTextFromPDF(localPath);
+        // Baixar PDF da URL
+        const response = await fetch(edital.file_url);
+        if (!response.ok) {
+          throw new Error(`Failed to download PDF: ${response.statusText}`);
+        }
+        
+        const buffer = await response.arrayBuffer();
+        console.log(`[EditalParser] Downloaded ${buffer.byteLength} bytes`);
+        
+        // Salvar temporariamente
+        const tempPath = `/tmp/${Date.now()}-edital.pdf`;
+        const fs = await import('fs');
+        fs.writeFileSync(tempPath, Buffer.from(buffer));
+        
+        console.log(`[EditalParser] Extracting text from: ${tempPath}`);
+        const fullText = await extractTextFromPDF(tempPath);
         
         // Extrair apenas seção de conteúdo programático
         editalText = extractProgramContent(fullText);
         
         console.log(`[EditalParser] Extracted ${editalText.length} characters from PDF`);
+        
+        // Limpar arquivo temporário
+        fs.unlinkSync(tempPath);
       } catch (error) {
-        console.warn('[EditalParser] Failed to extract PDF, using original_text:', error);
+        console.error('[EditalParser] Failed to download/extract PDF:', error);
+        console.warn('[EditalParser] Falling back to original_text');
       }
     }
 
