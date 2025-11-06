@@ -206,7 +206,7 @@ IMPORTANTE:
                           },
                         },
                       },
-                      required: ['name', 'description', 'difficulty', 'priority', 'estimatedConcepts'],
+                      required: ['name', 'description', 'difficulty', 'priority', 'estimatedConcepts', 'subtopics'],
                       additionalProperties: false,
                     },
                   },
