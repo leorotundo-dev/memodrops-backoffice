@@ -9,6 +9,7 @@
 
 import { query } from '../db/index.js';
 import OpenAI from 'openai';
+import { extractTextFromPDF, extractProgramContent, chunkText } from '../utils/pdfExtractor.js';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -71,8 +72,29 @@ export async function processEdital(editalId: number): Promise<void> {
       ['processing', editalId]
     );
 
+    // Extrair texto do PDF se fileUrl estiver disponível
+    let editalText = edital.original_text || '';
+    
+    if (edital.file_url && edital.file_url.includes('/uploads/')) {
+      try {
+        // Construir caminho local do arquivo
+        const filename = edital.file_url.split('/uploads/')[1];
+        const localPath = `/tmp/editals/${filename}`;
+        
+        console.log(`[EditalParser] Extracting text from PDF: ${localPath}`);
+        const fullText = await extractTextFromPDF(localPath);
+        
+        // Extrair apenas seção de conteúdo programático
+        editalText = extractProgramContent(fullText);
+        
+        console.log(`[EditalParser] Extracted ${editalText.length} characters from PDF`);
+      } catch (error) {
+        console.warn('[EditalParser] Failed to extract PDF, using original_text:', error);
+      }
+    }
+
     // Extrair conteúdo programático com IA
-    const subjects = await extractSubjectsFromEdital(edital.original_text || '');
+    const subjects = await extractSubjectsFromEdital(editalText);
 
     // Salvar matérias, tópicos e subtópicos no banco
     for (let i = 0; i < subjects.length; i++) {
@@ -102,6 +124,59 @@ export async function processEdital(editalId: number): Promise<void> {
  * Extrai matérias e tópicos do texto do edital usando IA
  */
 async function extractSubjectsFromEdital(editalText: string): Promise<ExtractedSubject[]> {
+  // Se o texto for muito longo, dividir em chunks
+  if (editalText.length > 15000) {
+    console.log(`[EditalParser] Text is long (${editalText.length} chars), using chunking strategy`);
+    return await extractWithChunking(editalText);
+  }
+  
+  // Texto curto: processar diretamente
+  return await extractFromSingleText(editalText);
+}
+
+/**
+ * Extrai conteúdo de texto longo usando chunking
+ */
+async function extractWithChunking(editalText: string): Promise<ExtractedSubject[]> {
+  const chunks = chunkText(editalText, 15000);
+  console.log(`[EditalParser] Split into ${chunks.length} chunks`);
+  
+  const allSubjects: ExtractedSubject[] = [];
+  
+  // Processar cada chunk
+  for (let i = 0; i < chunks.length; i++) {
+    console.log(`[EditalParser] Processing chunk ${i + 1}/${chunks.length}`);
+    
+    try {
+      const chunkSubjects = await extractFromSingleText(chunks[i]);
+      
+      // Mesclar com resultados anteriores
+      for (const subject of chunkSubjects) {
+        const existing = allSubjects.find(s => s.name.toLowerCase() === subject.name.toLowerCase());
+        
+        if (existing) {
+          // Matéria já existe: adicionar tópicos
+          existing.topics.push(...subject.topics);
+          // Atualizar peso (média)
+          existing.weight = Math.round((existing.weight + subject.weight) / 2);
+        } else {
+          // Nova matéria
+          allSubjects.push(subject);
+        }
+      }
+    } catch (error) {
+      console.error(`[EditalParser] Error processing chunk ${i + 1}:`, error);
+      // Continuar com próximos chunks
+    }
+  }
+  
+  return allSubjects;
+}
+
+/**
+ * Extrai conteúdo de um único texto (chunk)
+ */
+async function extractFromSingleText(editalText: string): Promise<ExtractedSubject[]> {
   const prompt = `Você é um especialista em análise de editais de concursos públicos.
 
 Analise o seguinte conteúdo programático de um edital e extraia:
@@ -116,7 +191,7 @@ Analise o seguinte conteúdo programático de um edital e extraia:
 
 EDITAL:
 \`\`\`
-${editalText.substring(0, 15000)} 
+${editalText} 
 \`\`\`
 
 Retorne um JSON estruturado seguindo este formato EXATO:
@@ -155,7 +230,11 @@ IMPORTANTE:
 - Estime conceitos de forma realista (1 conceito = 1 pílula de teoria)
 - Prioridade alta (8-10) para tópicos muito cobrados
 - Peso baseado no volume total de conteúdo da matéria
-- Inclua subtópicos apenas quando houver hierarquia clara`;
+- **SEMPRE inclua subtópicos quando houver itens numerados ou detalhamento**
+- Subtópicos devem capturar a granularidade do edital (ex: "1.1", "1.2", "a)", "b)")
+- Se um tópico tem 5+ itens listados, cada item deve virar um subtópico
+- Descrições devem ser claras e auto-explicativas
+- Priorize COMPLETUDE: não omita nenhum tópico ou subtópico do edital`;
 
   const response = await openai.chat.completions.create({
     model: 'gpt-4.1-mini',
