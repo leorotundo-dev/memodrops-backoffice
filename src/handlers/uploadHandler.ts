@@ -2,7 +2,7 @@
  * Upload Handler
  * 
  * Endpoint para upload de arquivos (editais em PDF)
- * Storage: Local filesystem (/tmp/editals)
+ * Storage: Persistent volume (/data/uploads via Railway Volume)
  */
 
 import { Request, Response } from 'express';
@@ -10,8 +10,9 @@ import multer from 'multer';
 import fs from 'fs/promises';
 import path from 'path';
 
-// Diretório para uploads
-const UPLOAD_DIR = '/tmp/editals';
+// Diretório para uploads (persistente via Railway Volume)
+// Railway monta volumes em /data, então usamos /data/uploads
+const UPLOAD_DIR = process.env.UPLOAD_DIR || '/data/uploads';
 
 // Configurar multer para armazenar em memória
 const upload = multer({

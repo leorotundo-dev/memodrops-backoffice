@@ -12,10 +12,13 @@ import hierarchyRouter from './routes/hierarchy.js';
 import editalRouter from './routes/edital.js';
 
 // Criar diretório para uploads se não existir
-const uploadsDir = '/tmp/editals';
+// Usar /data/uploads para persistência via Railway Volume
+const uploadsDir = process.env.UPLOAD_DIR || '/data/uploads';
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
   console.log(`✅ Created uploads directory: ${uploadsDir}`);
+} else {
+  console.log(`✅ Uploads directory already exists: ${uploadsDir}`);
 }
 
 const app = express();

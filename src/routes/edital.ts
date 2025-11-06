@@ -248,7 +248,8 @@ router.get('/api/contest/:id/editals', async (req, res) => {
 router.get('/uploads/:filename', async (req, res) => {
   try {
     const { filename } = req.params;
-    const filePath = path.join('/tmp/editals', filename);
+    const uploadsDir = process.env.UPLOAD_DIR || '/data/uploads';
+    const filePath = path.join(uploadsDir, filename);
 
     // Verificar se arquivo existe
     await fs.access(filePath);
