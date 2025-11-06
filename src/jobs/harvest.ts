@@ -2,6 +2,7 @@
 import { harvestFGV } from '../adapters/fgv.js';
 import { harvestCebraspe } from '../adapters/ceb.js';
 import { harvestDOU } from '../adapters/dou.js';
+import { harvestPlanalto } from '../adapters/planalto.js';
 import { query } from '../db/index.js';
 import { isDuplicate } from '../pipeline/dedupe.js';
 import { detectPII } from '../compliance/pii-detector.js';
@@ -27,6 +28,7 @@ export async function runAll(): Promise<HarvestResult> {
   
   const sources = [
     { name: 'DOU', fn: harvestDOU },
+    { name: 'Planalto', fn: harvestPlanalto },
     { name: 'FGV', fn: harvestFGV },
     { name: 'CESPE', fn: harvestCebraspe },
   ];
@@ -55,7 +57,7 @@ export async function runAll(): Promise<HarvestResult> {
           }));
           
           let license = 'unknown';
-          if (name === 'DOU' || name === 'FGV' || name === 'CESPE') {
+          if (name === 'DOU' || name === 'Planalto' || name === 'FGV' || name === 'CESPE') {
             license = 'public_domain';
           }
           
