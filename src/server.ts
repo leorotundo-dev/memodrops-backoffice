@@ -34,6 +34,24 @@ console.log('[DEBUG] Registering edital router...');
 app.use(editalRouter);
 console.log('[DEBUG] Edital router registered');
 
+// Drop tables endpoint (DANGER - development only)
+app.post('/admin/drop-tables', async (req, res) => {
+  try {
+    console.log('[DROP] Dropping all tables...');
+    await query('DROP TABLE IF EXISTS subtopics CASCADE');
+    await query('DROP TABLE IF EXISTS topics CASCADE');
+    await query('DROP TABLE IF EXISTS subjects CASCADE');
+    await query('DROP TABLE IF EXISTS editals CASCADE');
+    await query('DROP TABLE IF EXISTS contests CASCADE');
+    await query('DROP TABLE IF EXISTS categories CASCADE');
+    console.log('[DROP] All tables dropped');
+    res.json({ success: true, message: 'All tables dropped' });
+  } catch (error) {
+    console.error('[DROP] Error:', error);
+    res.status(500).json({ error: 'Failed to drop tables' });
+  }
+});
+
 // Seed endpoint (development only)
 app.post('/admin/seed', async (req, res) => {
   try {
