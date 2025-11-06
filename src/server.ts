@@ -30,7 +30,9 @@ app.use(setupRouter);
 app.use(hierarchyRouter);
 
 // Edital endpoints
+console.log('[DEBUG] Registering edital router...');
 app.use(editalRouter);
+console.log('[DEBUG] Edital router registered');
 
 // Seed endpoint (development only)
 app.post('/admin/seed', async (req, res) => {
