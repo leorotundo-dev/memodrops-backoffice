@@ -2,6 +2,7 @@
 import express from 'express';
 import cron from 'node-cron';
 import { runAll } from './jobs/harvest.js';
+import { processHarvestItems } from './jobs/process-content.js';
 import { query } from './db/index.js';
 import { calculateIC, getTopicGaps } from './ic-engine/calculator.js';
 import { setupRouter } from './setup-endpoint.js';
@@ -63,6 +64,20 @@ app.get('/admin/harvest/items', async (req, res) => {
   } catch (error) {
     console.error('[API] Erro ao listar itens:', error);
     res.status(500).json({ error: 'Erro ao listar itens' });
+  }
+});
+
+/**
+ * POST /admin/harvest/process
+ * Processa itens coletados e envia para MemoDrops
+ */
+app.post('/admin/harvest/process', async (req, res) => {
+  try {
+    const result = await processHarvestItems();
+    res.json({ success: true, result });
+  } catch (error) {
+    console.error('[API] Erro ao processar itens:', error);
+    res.status(500).json({ error: 'Erro ao processar itens' });
   }
 });
 
