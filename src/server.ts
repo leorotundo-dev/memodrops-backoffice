@@ -1,6 +1,7 @@
 // src/server.ts
 import express from 'express';
 import cron from 'node-cron';
+import fs from 'fs';
 import { runAll } from './jobs/harvest.js';
 import { processHarvestItems } from './jobs/process-content.js';
 import { query } from './db/index.js';
@@ -9,6 +10,13 @@ import { setupRouter } from './setup-endpoint.js';
 import { autoSetupDatabase } from './db/auto-setup.js';
 import hierarchyRouter from './routes/hierarchy.js';
 import editalRouter from './routes/edital.js';
+
+// Criar diretório para uploads se não existir
+const uploadsDir = '/tmp/editals';
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log(`✅ Created uploads directory: ${uploadsDir}`);
+}
 
 const app = express();
 const PORT = process.env.PORT || 3001;
