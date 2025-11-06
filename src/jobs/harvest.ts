@@ -5,6 +5,10 @@ import { harvestDOU } from '../adapters/dou.js';
 import { harvestPlanalto } from '../adapters/planalto.js';
 import { harvestCamara } from '../adapters/camara.js';
 import { harvestLexML } from '../adapters/lexml.js';
+import { harvestFCC } from '../adapters/fcc.js';
+import { harvestVunesp } from '../adapters/vunesp.js';
+import { harvestQuadrix } from '../adapters/quadrix.js';
+import { harvestPCI } from '../adapters/pci.js';
 import { query } from '../db/index.js';
 import { isDuplicate } from '../pipeline/dedupe.js';
 import { detectPII } from '../compliance/pii-detector.js';
@@ -35,6 +39,10 @@ export async function runAll(): Promise<HarvestResult> {
     { name: 'LexML', fn: harvestLexML },
     { name: 'FGV', fn: harvestFGV },
     { name: 'CESPE', fn: harvestCebraspe },
+    { name: 'FCC', fn: harvestFCC },
+    { name: 'Vunesp', fn: harvestVunesp },
+    { name: 'Quadrix', fn: harvestQuadrix },
+    { name: 'PCI', fn: harvestPCI },
   ];
   
   for (const { name, fn } of sources) {
@@ -61,7 +69,7 @@ export async function runAll(): Promise<HarvestResult> {
           }));
           
           let license = 'unknown';
-          if (name === 'DOU' || name === 'Planalto' || name === 'Câmara' || name === 'LexML' || name === 'FGV' || name === 'CESPE') {
+          if (name === 'DOU' || name === 'Planalto' || name === 'Câmara' || name === 'LexML' || name === 'FGV' || name === 'CESPE' || name === 'FCC' || name === 'Vunesp' || name === 'Quadrix' || name === 'PCI') {
             license = 'public_domain';
           }
           
