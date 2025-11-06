@@ -145,7 +145,8 @@ async function extractSubjectsFromEdital(editalText: string): Promise<ExtractedS
   console.log(`[extractSubjectsFromEdital] Starting with ${editalText.length} chars`);
   
   // Se o texto for muito longo, dividir em chunks
-  if (editalText.length > 15000) {
+  // GPT-4.1 suporta 128k tokens (~100k caracteres)
+  if (editalText.length > 100000) {
     console.log(`[EditalParser] Text is long (${editalText.length} chars), using chunking strategy`);
     return await extractWithChunking(editalText);
   }
@@ -158,7 +159,7 @@ async function extractSubjectsFromEdital(editalText: string): Promise<ExtractedS
  * Extrai conteúdo de texto longo usando chunking
  */
 async function extractWithChunking(editalText: string): Promise<ExtractedSubject[]> {
-  const chunks = chunkText(editalText, 15000);
+  const chunks = chunkText(editalText, 100000);
   console.log(`[EditalParser] Split into ${chunks.length} chunks`);
   
   const allSubjects: ExtractedSubject[] = [];
@@ -320,6 +321,7 @@ IMPORTANTE:
         },
       },
     },
+    max_tokens: 16000,
   });
 
   const content = response.choices[0].message.content;
