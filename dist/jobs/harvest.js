@@ -1,6 +1,14 @@
 // src/jobs/harvest.ts
 import { harvestFGV } from '../adapters/fgv.js';
 import { harvestCebraspe } from '../adapters/ceb.js';
+import { harvestDOU } from '../adapters/dou.js';
+import { harvestPlanalto } from '../adapters/planalto.js';
+import { harvestCamara } from '../adapters/camara.js';
+import { harvestLexML } from '../adapters/lexml.js';
+import { harvestFCC } from '../adapters/fcc.js';
+import { harvestVunesp } from '../adapters/vunesp.js';
+import { harvestQuadrix } from '../adapters/quadrix.js';
+import { harvestPCI } from '../adapters/pci.js';
 import { query } from '../db/index.js';
 import { isDuplicate } from '../pipeline/dedupe.js';
 import { detectPII } from '../compliance/pii-detector.js';
@@ -14,8 +22,16 @@ export async function runAll() {
         sources: [],
     };
     const sources = [
+        { name: 'DOU', fn: harvestDOU },
+        { name: 'Planalto', fn: harvestPlanalto },
+        { name: 'Câmara', fn: harvestCamara },
+        { name: 'LexML', fn: harvestLexML },
         { name: 'FGV', fn: harvestFGV },
         { name: 'CESPE', fn: harvestCebraspe },
+        { name: 'FCC', fn: harvestFCC },
+        { name: 'Vunesp', fn: harvestVunesp },
+        { name: 'Quadrix', fn: harvestQuadrix },
+        { name: 'PCI', fn: harvestPCI },
     ];
     for (const { name, fn } of sources) {
         try {
@@ -36,7 +52,7 @@ export async function runAll() {
                         confidence: m.confidence,
                     }));
                     let license = 'unknown';
-                    if (name === 'FGV' || name === 'CESPE') {
+                    if (name === 'DOU' || name === 'Planalto' || name === 'Câmara' || name === 'LexML' || name === 'FGV' || name === 'CESPE' || name === 'FCC' || name === 'Vunesp' || name === 'Quadrix' || name === 'PCI') {
                         license = 'public_domain';
                     }
                     await query(`INSERT INTO harvest_items 

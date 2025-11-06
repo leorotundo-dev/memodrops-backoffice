@@ -8,6 +8,7 @@ import { calculateIC, getTopicGaps } from './ic-engine/calculator.js';
 import { setupRouter } from './setup-endpoint.js';
 import { autoSetupDatabase } from './db/auto-setup.js';
 import hierarchyRouter from './routes/hierarchy.js';
+import editalRouter from './routes/edital.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -27,6 +28,9 @@ app.use(setupRouter);
 
 // Hierarchy endpoints
 app.use(hierarchyRouter);
+
+// Edital endpoints
+app.use(editalRouter);
 
 // Seed endpoint (development only)
 app.post('/admin/seed', async (req, res) => {
