@@ -7,6 +7,7 @@ import { query } from './db/index.js';
 import { calculateIC, getTopicGaps } from './ic-engine/calculator.js';
 import { setupRouter } from './setup-endpoint.js';
 import { autoSetupDatabase } from './db/auto-setup.js';
+import hierarchyRouter from './routes/hierarchy.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -23,6 +24,9 @@ app.get('/health', (req, res) => {
 
 // Setup endpoints
 app.use(setupRouter);
+
+// Hierarchy endpoints
+app.use(hierarchyRouter);
 
 // ============================================================================
 // HARVESTER ADMIN ENDPOINTS

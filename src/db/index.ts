@@ -1,7 +1,7 @@
 // src/db/index.ts
 import { Pool } from 'pg';
 import 'dotenv/config';
-const pool = new Pool({
+export const pool = new Pool({
   host: process.env.PGHOST,
   port: Number(process.env.PGPORT || 5432),
   database: process.env.PGDATABASE,
