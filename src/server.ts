@@ -137,7 +137,7 @@ app.post('/admin/seed', async (req, res) => {
     res.json({ success: true, message: 'Database seeded successfully', categories: parseInt(result.rows[0].count) });
   } catch (error) {
     console.error('[SEED] Error:', error);
-    res.status(500).json({ error: 'Failed to seed database', details: error.message });
+    res.status(500).json({ error: 'Failed to seed database', details: error instanceof Error ? error.message : String(error) });
   }
 });
 
