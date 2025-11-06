@@ -14,11 +14,26 @@ export async function extractTextFromPDF(pdfPath: string): Promise<string> {
   const outputPath = path.join('/tmp', `${Date.now()}-extracted.txt`);
   
   try {
+    console.log(`[extractTextFromPDF] Input path: ${pdfPath}`);
+    console.log(`[extractTextFromPDF] File exists: ${fs.existsSync(pdfPath)}`);
+    
+    if (fs.existsSync(pdfPath)) {
+      const stats = fs.statSync(pdfPath);
+      console.log(`[extractTextFromPDF] File size: ${stats.size} bytes`);
+    }
+    
     // Usar pdftotext do poppler-utils (já instalado no sistema)
-    await execAsync(`pdftotext "${pdfPath}" "${outputPath}"`);
+    console.log(`[extractTextFromPDF] Running pdftotext...`);
+    const { stdout, stderr } = await execAsync(`pdftotext "${pdfPath}" "${outputPath}"`);
+    
+    if (stderr) {
+      console.log(`[extractTextFromPDF] pdftotext stderr: ${stderr}`);
+    }
     
     // Ler arquivo gerado
     const text = fs.readFileSync(outputPath, 'utf-8');
+    console.log(`[extractTextFromPDF] Extracted text length: ${text.length} chars`);
+    console.log(`[extractTextFromPDF] First 500 chars: ${text.substring(0, 500)}`);
     
     // Limpar arquivo temporário
     fs.unlinkSync(outputPath);
@@ -36,6 +51,9 @@ export async function extractTextFromPDF(pdfPath: string): Promise<string> {
  * @returns Texto do conteúdo programático
  */
 export function extractProgramContent(fullText: string): string {
+  console.log(`[extractProgramContent] Input length: ${fullText.length} chars`);
+  console.log(`[extractProgramContent] First 500 chars of input: ${fullText.substring(0, 500)}`);
+  
   // Procurar por padrões comuns de início de conteúdo programático
   const patterns = [
     /ANEXO\s+I\s*[-–]\s*CONTEÚDO PROGRAMÁTICO/i,
@@ -55,9 +73,12 @@ export function extractProgramContent(fullText: string): string {
   
   if (startIndex === -1) {
     // Se não encontrar seção específica, retorna texto completo
-    console.warn('[PDFExtractor] Could not find program content section, using full text');
+    console.warn('[extractProgramContent] Could not find program content section, using full text');
+    console.log(`[extractProgramContent] Output length (full text): ${fullText.length} chars`);
     return fullText;
   }
+  
+  console.log(`[extractProgramContent] Found program content at index: ${startIndex}`);
   
   // Procurar por fim da seção (próximo ANEXO ou fim do documento)
   const endPatterns = [
@@ -74,7 +95,11 @@ export function extractProgramContent(fullText: string): string {
     }
   }
   
-  return fullText.slice(startIndex, endIndex).trim();
+  const result = fullText.slice(startIndex, endIndex).trim();
+  console.log(`[extractProgramContent] Output length: ${result.length} chars`);
+  console.log(`[extractProgramContent] First 500 chars of output: ${result.substring(0, 500)}`);
+  
+  return result;
 }
 
 /**

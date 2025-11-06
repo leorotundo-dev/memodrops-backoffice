@@ -93,19 +93,31 @@ export async function processEdital(editalId: number): Promise<void> {
         const fs = await import('fs');
         fs.writeFileSync(tempPath, Buffer.from(buffer));
         
+        console.log(`[EditalParser] Saved PDF to: ${tempPath}`);
+        console.log(`[EditalParser] Temp file exists: ${fs.existsSync(tempPath)}`);
+        console.log(`[EditalParser] Temp file size: ${fs.statSync(tempPath).size} bytes`);
+        
         console.log(`[EditalParser] Extracting text from: ${tempPath}`);
         const fullText = await extractTextFromPDF(tempPath);
+        console.log(`[EditalParser] Full text extracted: ${fullText.length} chars`);
         
         // Extrair apenas seção de conteúdo programático
+        console.log(`[EditalParser] Extracting program content...`);
         editalText = extractProgramContent(fullText);
         
-        console.log(`[EditalParser] Extracted ${editalText.length} characters from PDF`);
+        console.log(`[EditalParser] Final editalText length: ${editalText.length} characters`);
+        console.log(`[EditalParser] First 500 chars: ${editalText.substring(0, 500)}`);
         
         // Limpar arquivo temporário
         fs.unlinkSync(tempPath);
       } catch (error) {
         console.error('[EditalParser] Failed to download/extract PDF:', error);
+        if (error instanceof Error) {
+          console.error('[EditalParser] Error message:', error.message);
+          console.error('[EditalParser] Error stack:', error.stack);
+        }
         console.warn('[EditalParser] Falling back to original_text');
+        editalText = edital.original_text || '';
       }
     }
 
