@@ -1,6 +1,7 @@
 // src/jobs/harvest.ts
 import { harvestFGV } from '../adapters/fgv.js';
 import { harvestCebraspe } from '../adapters/ceb.js';
+import { harvestDOU } from '../adapters/dou.js';
 import { query } from '../db/index.js';
 import { isDuplicate } from '../pipeline/dedupe.js';
 import { detectPII } from '../compliance/pii-detector.js';
@@ -25,6 +26,7 @@ export async function runAll(): Promise<HarvestResult> {
   };
   
   const sources = [
+    { name: 'DOU', fn: harvestDOU },
     { name: 'FGV', fn: harvestFGV },
     { name: 'CESPE', fn: harvestCebraspe },
   ];
@@ -53,7 +55,7 @@ export async function runAll(): Promise<HarvestResult> {
           }));
           
           let license = 'unknown';
-          if (name === 'FGV' || name === 'CESPE') {
+          if (name === 'DOU' || name === 'FGV' || name === 'CESPE') {
             license = 'public_domain';
           }
           
