@@ -47,13 +47,8 @@ router.post('/api/edital/create', async (req, res) => {
       return res.status(400).json({ error: 'fileUrl ou originalText é obrigatório' });
     }
 
-    // Se fileUrl foi fornecido, extrair texto do PDF
-    let text = originalText;
-    if (fileUrl && !text) {
-      // TODO: Implementar extração de texto do PDF
-      // Por enquanto, retornar erro
-      return res.status(400).json({ error: 'Extração de texto do PDF não implementada ainda. Forneça originalText.' });
-    }
+    // originalText é opcional: se não fornecido, será extraído do PDF no processamento
+    let text = originalText || null;
 
     // Inserir edital no banco
     const result = await query(
