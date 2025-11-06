@@ -39,9 +39,7 @@ router.post('/api/edital/create', async (req, res) => {
     const { contestId, title, editalNumber, fileUrl, originalText } = req.body;
 
     // Validações
-    if (!contestId) {
-      return res.status(400).json({ error: 'contestId é obrigatório' });
-    }
+    // contestId é opcional para testes
     if (!title) {
       return res.status(400).json({ error: 'title é obrigatório' });
     }
