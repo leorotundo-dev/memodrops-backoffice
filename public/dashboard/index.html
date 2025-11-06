@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>MemoDrops • Backoffice</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <link rel="icon" href="data:,">
     <style>
       .card { @apply rounded-2xl border bg-white shadow-sm p-4; }
@@ -13,6 +12,8 @@
       .mono { font-variant-numeric: tabular-nums; }
       .btn-primary { @apply px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition; }
       .btn-secondary { @apply px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 transition; }
+      .btn-sm { @apply px-3 py-1 text-sm; }
+      .tab-active { @apply border-blue-600 bg-blue-50 font-medium; }
     </style>
   </head>
   <body class="bg-slate-50 text-slate-900">
@@ -20,7 +21,7 @@
       <header class="flex items-center justify-between">
         <div>
           <h1 class="text-2xl font-bold">MemoDrops • Backoffice</h1>
-          <p class="text-sm text-slate-500">Gestão de editais, concursos, matérias e coleta de provas</p>
+          <p class="text-sm text-slate-500">Gestão hierárquica de conteúdo educacional</p>
         </div>
         <div class="flex items-center gap-3">
           <span id="env-status" class="pill bg-green-50 text-green-700 border-green-200">● Online</span>
@@ -28,202 +29,230 @@
       </header>
 
       <!-- Tabs -->
-      <nav class="flex gap-2 overflow-x-auto">
-        <button data-tab="editais" class="tab px-4 py-2 rounded-lg border bg-white whitespace-nowrap">📄 Editais</button>
-        <button data-tab="concursos" class="tab px-4 py-2 rounded-lg border bg-white whitespace-nowrap">🎯 Concursos</button>
-        <button data-tab="materias" class="tab px-4 py-2 rounded-lg border bg-white whitespace-nowrap">📚 Matérias</button>
-        <button data-tab="overview" class="tab px-4 py-2 rounded-lg border bg-white whitespace-nowrap">📊 Visão geral</button>
-        <button data-tab="sources" class="tab px-4 py-2 rounded-lg border bg-white whitespace-nowrap">🔗 Fontes</button>
-        <button data-tab="gaps" class="tab px-4 py-2 rounded-lg border bg-white whitespace-nowrap">🎯 Gaps por IC</button>
-        <button data-tab="raw" class="tab px-4 py-2 rounded-lg border bg-white whitespace-nowrap">📝 Itens recentes</button>
+      <nav class="flex gap-2 overflow-x-auto pb-2">
+        <button data-tab="categories" class="tab px-4 py-2 rounded-lg border bg-white whitespace-nowrap">📂 Categorias</button>
+        <button data-tab="contests" class="tab px-4 py-2 rounded-lg border bg-white whitespace-nowrap">🎯 Concursos</button>
+        <button data-tab="editals" class="tab px-4 py-2 rounded-lg border bg-white whitespace-nowrap">📄 Editais</button>
+        <button data-tab="subjects" class="tab px-4 py-2 rounded-lg border bg-white whitespace-nowrap">📚 Matérias</button>
+        <button data-tab="topics" class="tab px-4 py-2 rounded-lg border bg-white whitespace-nowrap">📝 Tópicos</button>
+        <button data-tab="subtopics" class="tab px-4 py-2 rounded-lg border bg-white whitespace-nowrap">🔍 Subtópicos</button>
+        <button data-tab="harvester" class="tab px-4 py-2 rounded-lg border bg-white whitespace-nowrap">🤖 Harvester</button>
+        <button data-tab="stats" class="tab px-4 py-2 rounded-lg border bg-white whitespace-nowrap">📊 Estatísticas</button>
       </nav>
 
-      <!-- EDITAIS TAB -->
-      <section id="tab-editais" class="space-y-4">
+      <!-- ========================================
+           TAB: CATEGORIAS
+           ======================================== -->
+      <section id="tab-categories" class="space-y-4">
         <div class="card">
           <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-semibold">Upload de Edital</h2>
+            <h2 class="text-lg font-semibold">Categorias de Objetivos</h2>
+            <button id="btn-add-category" class="btn-primary btn-sm">+ Nova Categoria</button>
           </div>
-          <div class="space-y-3">
-            <div>
-              <label class="block text-sm font-medium mb-2">Arquivo PDF do Edital</label>
-              <input type="file" id="edital-file" accept=".pdf" class="block w-full text-sm border rounded-lg p-2">
-            </div>
-            <div class="grid md:grid-cols-3 gap-3">
-              <div>
-                <label class="block text-sm font-medium mb-2">Título do Concurso</label>
-                <input type="text" id="edital-title" placeholder="Ex: Analista Legislativo - Câmara 2025" class="w-full border rounded-lg px-3 py-2">
-              </div>
-              <div>
-                <label class="block text-sm font-medium mb-2">Instituição</label>
-                <input type="text" id="edital-institution" placeholder="Ex: Câmara dos Deputados" class="w-full border rounded-lg px-3 py-2">
-              </div>
-              <div>
-                <label class="block text-sm font-medium mb-2">Data da Prova</label>
-                <input type="date" id="edital-date" class="w-full border rounded-lg px-3 py-2">
-              </div>
-            </div>
-            <div class="flex gap-2">
-              <button id="btn-upload-edital" class="btn-primary">📤 Fazer Upload e Processar com IA</button>
-              <button id="btn-cancel-upload" class="btn-secondary">Cancelar</button>
-            </div>
-            <div id="upload-status" class="hidden">
-              <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <div class="flex items-center gap-2">
-                  <div class="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-                  <span id="upload-message" class="text-sm text-blue-700">Processando...</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <div class="grid md:grid-cols-3 gap-4" id="categories-grid"></div>
         </div>
+      </section>
 
+      <!-- ========================================
+           TAB: CONCURSOS
+           ======================================== -->
+      <section id="tab-contests" class="hidden space-y-4">
         <div class="card">
           <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-semibold">Editais Cadastrados</h2>
-            <button id="btn-refresh-editais" class="btn-secondary text-sm">🔄 Atualizar</button>
+            <div>
+              <h2 class="text-lg font-semibold">Concursos e Provas</h2>
+              <p class="text-sm text-slate-500">Filtrar por categoria:</p>
+              <select id="filter-category" class="mt-2 border rounded-lg px-3 py-2">
+                <option value="">Todas as categorias</option>
+              </select>
+            </div>
+            <button id="btn-add-contest" class="btn-primary btn-sm">+ Novo Concurso</button>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
               <thead class="text-left text-slate-500 border-b">
                 <tr>
                   <th class="py-3 px-2">ID</th>
+                  <th class="py-3 px-2">Categoria</th>
                   <th class="py-3 px-2">Título</th>
                   <th class="py-3 px-2">Instituição</th>
-                  <th class="py-3 px-2">Data da Prova</th>
+                  <th class="py-3 px-2">Data</th>
+                  <th class="py-3 px-2">Vagas</th>
+                  <th class="py-3 px-2">Status</th>
+                  <th class="py-3 px-2">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tbl-contests"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================
+           TAB: EDITAIS
+           ======================================== -->
+      <section id="tab-editals" class="hidden space-y-4">
+        <div class="card">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-lg font-semibold">Editais</h2>
+              <p class="text-sm text-slate-500">Filtrar por concurso:</p>
+              <select id="filter-contest" class="mt-2 border rounded-lg px-3 py-2">
+                <option value="">Todos os concursos</option>
+              </select>
+            </div>
+            <button id="btn-upload-edital" class="btn-primary btn-sm">📤 Upload de Edital</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="text-left text-slate-500 border-b">
+                <tr>
+                  <th class="py-3 px-2">ID</th>
+                  <th class="py-3 px-2">Concurso</th>
+                  <th class="py-3 px-2">Título</th>
+                  <th class="py-3 px-2">Número</th>
                   <th class="py-3 px-2">Status</th>
                   <th class="py-3 px-2">Matérias</th>
                   <th class="py-3 px-2">Criado em</th>
                   <th class="py-3 px-2">Ações</th>
                 </tr>
               </thead>
-              <tbody id="tbl-editais" class="divide-y"></tbody>
+              <tbody id="tbl-editals"></tbody>
             </table>
           </div>
         </div>
       </section>
 
-      <!-- CONCURSOS TAB -->
-      <section id="tab-concursos" class="hidden space-y-4">
+      <!-- ========================================
+           TAB: MATÉRIAS
+           ======================================== -->
+      <section id="tab-subjects" class="hidden space-y-4">
         <div class="card">
-          <h2 class="text-lg font-semibold mb-4">Em desenvolvimento...</h2>
-          <p class="text-slate-600">Funcionalidade de gestão de concursos será implementada em breve.</p>
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-lg font-semibold">Matérias</h2>
+              <p class="text-sm text-slate-500">Filtrar por edital:</p>
+              <select id="filter-edital" class="mt-2 border rounded-lg px-3 py-2">
+                <option value="">Todos os editais</option>
+              </select>
+            </div>
+            <button id="btn-add-subject" class="btn-primary btn-sm">+ Nova Matéria</button>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4" id="subjects-grid"></div>
         </div>
       </section>
 
-      <!-- MATERIAS TAB -->
-      <section id="tab-materias" class="hidden space-y-4">
+      <!-- ========================================
+           TAB: TÓPICOS
+           ======================================== -->
+      <section id="tab-topics" class="hidden space-y-4">
         <div class="card">
-          <h2 class="text-lg font-semibold mb-4">Em desenvolvimento...</h2>
-          <p class="text-slate-600">Funcionalidade de gestão de matérias será implementada em breve.</p>
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-lg font-semibold">Tópicos</h2>
+              <p class="text-sm text-slate-500">Filtrar por matéria:</p>
+              <select id="filter-subject" class="mt-2 border rounded-lg px-3 py-2">
+                <option value="">Todas as matérias</option>
+              </select>
+            </div>
+            <button id="btn-add-topic" class="btn-primary btn-sm">+ Novo Tópico</button>
+          </div>
+          <div class="space-y-2" id="topics-list"></div>
         </div>
       </section>
 
-      <!-- Overview -->
-      <section id="tab-overview" class="hidden space-y-4">
+      <!-- ========================================
+           TAB: SUBTÓPICOS
+           ======================================== -->
+      <section id="tab-subtopics" class="hidden space-y-4">
+        <div class="card">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-lg font-semibold">Subtópicos</h2>
+              <p class="text-sm text-slate-500">Filtrar por tópico:</p>
+              <select id="filter-topic" class="mt-2 border rounded-lg px-3 py-2">
+                <option value="">Todos os tópicos</option>
+              </select>
+            </div>
+            <button id="btn-add-subtopic" class="btn-primary btn-sm">+ Novo Subtópico</button>
+          </div>
+          <div class="space-y-2" id="subtopics-list"></div>
+        </div>
+      </section>
+
+      <!-- ========================================
+           TAB: HARVESTER
+           ======================================== -->
+      <section id="tab-harvester" class="hidden space-y-4">
+        <div class="card">
+          <h2 class="text-lg font-semibold mb-4">Coleta Automática de Provas</h2>
+          <p class="text-slate-600 mb-4">Configure e execute a coleta automática de provas antigas das bancas.</p>
+          <div class="flex gap-2">
+            <button id="btn-run-harvest" class="btn-primary">▶️ Executar Coleta</button>
+            <button id="btn-view-harvest-items" class="btn-secondary">📋 Ver Itens Coletados</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================
+           TAB: ESTATÍSTICAS
+           ======================================== -->
+      <section id="tab-stats" class="hidden space-y-4">
         <div class="grid md:grid-cols-4 gap-3">
           <div class="card">
-            <div class="text-sm text-slate-500">Novos (24h)</div>
-            <div id="kpi-new-24h" class="text-2xl font-semibold mono">—</div>
+            <div class="text-sm text-slate-500">Categorias</div>
+            <div id="stat-categories" class="text-2xl font-semibold mono">—</div>
           </div>
           <div class="card">
-            <div class="text-sm text-slate-500">Erros (7d)</div>
-            <div id="kpi-errors-7d" class="text-2xl font-semibold mono">—</div>
+            <div class="text-sm text-slate-500">Concursos</div>
+            <div id="stat-contests" class="text-2xl font-semibold mono">—</div>
           </div>
           <div class="card">
-            <div class="text-sm text-slate-500">Sem licença clara</div>
-            <div id="kpi-unknown-license" class="text-2xl font-semibold mono">—</div>
+            <div class="text-sm text-slate-500">Editais</div>
+            <div id="stat-editals" class="text-2xl font-semibold mono">—</div>
           </div>
           <div class="card">
-            <div class="text-sm text-slate-500">Latência média (min)</div>
-            <div id="kpi-latency" class="text-2xl font-semibold mono">—</div>
+            <div class="text-sm text-slate-500">Matérias</div>
+            <div id="stat-subjects" class="text-2xl font-semibold mono">—</div>
           </div>
         </div>
         <div class="card">
-          <div class="flex items-center justify-between mb-2">
-            <div class="text-sm font-medium">Coleta por dia (últimos 14 dias)</div>
-            <div class="text-xs text-slate-500" id="chart-subtitle">Itens: novos/dedup/erros</div>
-          </div>
-          <canvas id="chartDaily" height="80"></canvas>
-        </div>
-      </section>
-
-      <!-- Sources -->
-      <section id="tab-sources" class="hidden space-y-3">
-        <div class="card">
-          <div class="flex items-center justify-between mb-2">
-            <div class="text-sm font-medium">Catálogo de Fontes</div>
-            <div class="text-xs text-slate-500">status, últimos itens, erros</div>
-          </div>
-          <table class="w-full text-sm">
-            <thead class="text-left text-slate-500">
-              <tr><th class="py-2">Fonte</th><th>Tipo</th><th class="hidden md:table-cell">URL</th><th>Prioridade</th><th>Última verificação</th><th>Licença</th><th>Allowed</th></tr>
-            </thead>
-            <tbody id="tbl-sources" class="align-top"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- Gaps -->
-      <section id="tab-gaps" class="hidden space-y-3">
-        <div class="card">
-          <div class="flex items-center justify-between mb-3">
-            <div>
-              <div class="text-sm font-medium">Gaps por IC (janela <span id="gap-window">12m</span>)</div>
-              <div class="text-xs text-slate-500">Subtemas com IC alto e poucas questões mapeadas</div>
-            </div>
-            <div class="flex items-center gap-2">
-              <label class="text-xs">Janela:</label>
-              <select id="sel-window" class="text-xs border rounded-md px-2 py-1">
-                <option>6m</option><option selected>12m</option><option>24m</option>
-              </select>
-              <input id="inp-subject" class="text-xs border rounded-md px-2 py-1" placeholder="subject (ex.: dir_const)">
-              <button id="btn-refresh-gaps" class="text-xs px-2 py-1 rounded-md border bg-white">Atualizar</button>
-            </div>
-          </div>
-          <table class="w-full text-sm">
-            <thead class="text-left text-slate-500">
-              <tr><th>Subtema</th><th>IC (12m)</th><th>Questões</th></tr>
-            </thead>
-            <tbody id="tbl-gaps" class="align-top"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- Raw items -->
-      <section id="tab-raw" class="hidden space-y-3">
-        <div class="card">
-          <div class="flex items-center justify-between mb-2">
-            <div class="text-sm font-medium">Itens recentes (últimos 200)</div>
-            <button id="btn-refresh-raw" class="text-xs px-2 py-1 rounded-md border bg-white">Atualizar</button>
-          </div>
-          <div id="list-raw" class="grid gap-2"></div>
+          <h3 class="font-semibold mb-3">Hierarquia Completa</h3>
+          <div id="hierarchy-tree" class="text-sm space-y-1"></div>
         </div>
       </section>
 
       <footer class="text-xs text-slate-500 py-6">
-        <div>MemoDrops Backoffice • Build: <span id="build-info"></span></div>
+        <div>MemoDrops Backoffice • Hierarquia Educacional</div>
       </footer>
     </div>
 
-    <script src="./config.js"></script>
     <script>
-      const C = window.MEMODROPS_CONFIG || {};
-      const API_BASE = C.HARVESTER_BASE_URL || window.location.origin;
-      document.getElementById('build-info').textContent = new Date().toISOString();
+      const API_BASE = window.location.origin;
 
-      // Tabs
+      // ========== TAB SYSTEM ==========
       const tabs = document.querySelectorAll('.tab');
       tabs.forEach(btn => btn.addEventListener('click', () => {
         document.querySelectorAll('section[id^="tab-"]').forEach(s => s.classList.add('hidden'));
         document.getElementById('tab-'+btn.dataset.tab).classList.remove('hidden');
-        tabs.forEach(b => b.classList.remove('border-blue-600', 'bg-blue-50'));
-        btn.classList.add('border-blue-600', 'bg-blue-50');
+        tabs.forEach(b => b.classList.remove('tab-active'));
+        btn.classList.add('tab-active');
+        
+        // Load data for the selected tab
+        const tabName = btn.dataset.tab;
+        if(tabName === 'categories') loadCategories();
+        else if(tabName === 'contests') loadContests();
+        else if(tabName === 'editals') loadEditals();
+        else if(tabName === 'subjects') loadSubjects();
+        else if(tabName === 'topics') loadTopics();
+        else if(tabName === 'subtopics') loadSubtopics();
+        else if(tabName === 'stats') loadStats();
       }));
-      // default: editais
+      
+      // Default: categories
       tabs[0].click();
 
-      // Helpers
+      // ========== HELPERS ==========
       async function safeFetch(url, opt={}){
         try {
           const r = await fetch(url, opt);
@@ -235,39 +264,123 @@
         }
       }
 
-      // ========== EDITAIS ==========
-      async function loadEditais(){
-        // Assumindo que o endpoint existe no app principal
-        const data = await safeFetch('https://web-production-cfe1.up.railway.app/api/trpc/edital.list');
-        const tbody = document.getElementById('tbl-editais');
+      // ========== CATEGORIES ==========
+      async function loadCategories(){
+        const data = await safeFetch(API_BASE + "/api/categories");
+        const grid = document.getElementById('categories-grid');
+        grid.innerHTML = "";
+        
+        const categories = data?.categories || [];
+        if(categories.length === 0){
+          grid.innerHTML = '<p class="col-span-3 text-center text-slate-500">Nenhuma categoria cadastrada</p>';
+          return;
+        }
+
+        for(const cat of categories){
+          const card = document.createElement('div');
+          card.className = "card hover:shadow-lg transition cursor-pointer";
+          card.innerHTML = `
+            <div class="text-4xl mb-2">${cat.icon || '📁'}</div>
+            <h3 class="font-semibold">${cat.name}</h3>
+            <p class="text-xs text-slate-500 mt-1">${cat.description || ''}</p>
+            <div class="mt-3 flex gap-2">
+              <button onclick="editCategory(${cat.id})" class="text-blue-600 hover:underline text-xs">Editar</button>
+              <button onclick="deleteCategory(${cat.id})" class="text-red-600 hover:underline text-xs">Excluir</button>
+            </div>
+          `;
+          grid.appendChild(card);
+        }
+      }
+
+      window.editCategory = function(id){
+        alert('Editar categoria #' + id + ' (em desenvolvimento)');
+      };
+
+      window.deleteCategory = function(id){
+        if(!confirm('Excluir categoria #' + id + '?')) return;
+        alert('Exclusão em desenvolvimento');
+      };
+
+      document.getElementById('btn-add-category').addEventListener('click', () => {
+        alert('Adicionar nova categoria (em desenvolvimento)');
+      });
+
+      // ========== CONTESTS ==========
+      async function loadContests(){
+        const data = await safeFetch(API_BASE + "/api/contests");
+        const tbody = document.getElementById('tbl-contests');
         tbody.innerHTML = "";
         
-        const editais = data?.result?.data || [];
-        if(editais.length === 0){
+        const contests = data?.contests || [];
+        if(contests.length === 0){
+          tbody.innerHTML = '<tr><td colspan="8" class="py-4 text-center text-slate-500">Nenhum concurso cadastrado</td></tr>';
+          return;
+        }
+
+        for(const c of contests){
+          const tr = document.createElement('tr');
+          const statusColor = {
+            'active': 'bg-green-50 text-green-700 border-green-200',
+            'upcoming': 'bg-blue-50 text-blue-700 border-blue-200',
+            'past': 'bg-gray-50 text-gray-700 border-gray-200',
+            'cancelled': 'bg-red-50 text-red-700 border-red-200'
+          }[c.status] || 'bg-gray-50 text-gray-700 border-gray-200';
+          
+          tr.innerHTML = `
+            <td class="py-3 px-2">#${c.id}</td>
+            <td class="py-3 px-2">${c.category_name || '-'}</td>
+            <td class="py-3 px-2 font-medium">${c.title}</td>
+            <td class="py-3 px-2">${c.institution}</td>
+            <td class="py-3 px-2">${c.exam_date ? new Date(c.exam_date).toLocaleDateString('pt-BR') : '-'}</td>
+            <td class="py-3 px-2">${c.vacancies || '-'}</td>
+            <td class="py-3 px-2"><span class="pill ${statusColor}">${c.status}</span></td>
+            <td class="py-3 px-2">
+              <button onclick="editContest(${c.id})" class="text-blue-600 hover:underline text-xs">Editar</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        }
+      }
+
+      window.editContest = function(id){
+        alert('Editar concurso #' + id + ' (em desenvolvimento)');
+      };
+
+      document.getElementById('btn-add-contest').addEventListener('click', () => {
+        alert('Adicionar novo concurso (em desenvolvimento)');
+      });
+
+      // ========== EDITALS ==========
+      async function loadEditals(){
+        const data = await safeFetch(API_BASE + "/api/editals");
+        const tbody = document.getElementById('tbl-editals');
+        tbody.innerHTML = "";
+        
+        const editals = data?.editals || [];
+        if(editals.length === 0){
           tbody.innerHTML = '<tr><td colspan="8" class="py-4 text-center text-slate-500">Nenhum edital cadastrado</td></tr>';
           return;
         }
 
-        for(const ed of editais){
+        for(const e of editals){
           const tr = document.createElement('tr');
           const statusColor = {
             'pending': 'bg-yellow-50 text-yellow-700 border-yellow-200',
             'processing': 'bg-blue-50 text-blue-700 border-blue-200',
             'completed': 'bg-green-50 text-green-700 border-green-200',
             'error': 'bg-red-50 text-red-700 border-red-200'
-          }[ed.status] || 'bg-gray-50 text-gray-700 border-gray-200';
+          }[e.status] || 'bg-gray-50 text-gray-700 border-gray-200';
           
           tr.innerHTML = `
-            <td class="py-3 px-2">#${ed.id}</td>
-            <td class="py-3 px-2 font-medium">${ed.title || '-'}</td>
-            <td class="py-3 px-2">${ed.institution || '-'}</td>
-            <td class="py-3 px-2">${ed.examDate ? new Date(ed.examDate).toLocaleDateString('pt-BR') : '-'}</td>
-            <td class="py-3 px-2"><span class="pill ${statusColor}">${ed.status}</span></td>
-            <td class="py-3 px-2">${ed.subjectsCount || 0}</td>
-            <td class="py-3 px-2">${ed.createdAt ? new Date(ed.createdAt).toLocaleDateString('pt-BR') : '-'}</td>
+            <td class="py-3 px-2">#${e.id}</td>
+            <td class="py-3 px-2">${e.contest_title || '-'}</td>
+            <td class="py-3 px-2 font-medium">${e.title}</td>
+            <td class="py-3 px-2">${e.edital_number || '-'}</td>
+            <td class="py-3 px-2"><span class="pill ${statusColor}">${e.status}</span></td>
+            <td class="py-3 px-2">${e.subjects_count || 0}</td>
+            <td class="py-3 px-2">${e.created_at ? new Date(e.created_at).toLocaleDateString('pt-BR') : '-'}</td>
             <td class="py-3 px-2">
-              <button onclick="viewEdital(${ed.id})" class="text-blue-600 hover:underline text-xs">Ver</button>
-              ${ed.status === 'error' ? `<button onclick="reprocessEdital(${ed.id})" class="text-orange-600 hover:underline text-xs ml-2">Reprocessar</button>` : ''}
+              <button onclick="viewEdital(${e.id})" class="text-blue-600 hover:underline text-xs">Ver</button>
             </td>
           `;
           tbody.appendChild(tr);
@@ -278,243 +391,153 @@
         alert('Ver edital #' + id + ' (em desenvolvimento)');
       };
 
-      window.reprocessEdital = async function(id){
-        if(!confirm('Reprocessar edital #' + id + ' com IA?')) return;
-        alert('Reprocessamento iniciado (em desenvolvimento)');
-      };
-
-      document.getElementById('btn-refresh-editais').addEventListener('click', loadEditais);
-
-      // Upload de edital
-      document.getElementById('btn-upload-edital').addEventListener('click', async () => {
-        const fileInput = document.getElementById('edital-file');
-        const title = document.getElementById('edital-title').value;
-        const institution = document.getElementById('edital-institution').value;
-        const examDate = document.getElementById('edital-date').value;
-
-        if(!fileInput.files[0]){
-          alert('Selecione um arquivo PDF');
-          return;
-        }
-        if(!title || !institution || !examDate){
-          alert('Preencha todos os campos');
-          return;
-        }
-
-        const statusDiv = document.getElementById('upload-status');
-        const messageSpan = document.getElementById('upload-message');
-        statusDiv.classList.remove('hidden');
-        messageSpan.textContent = 'Fazendo upload do arquivo...';
-
-        try {
-          // 1. Upload do arquivo
-          const formData = new FormData();
-          formData.append('file', fileInput.files[0]);
-          
-          const uploadRes = await fetch('https://web-production-cfe1.up.railway.app/api/upload', {
-            method: 'POST',
-            body: formData
-          });
-          
-          if(!uploadRes.ok) throw new Error('Erro no upload');
-          const uploadData = await uploadRes.json();
-          
-          messageSpan.textContent = 'Extraindo texto do PDF...';
-          
-          // 2. Extrair texto
-          const extractRes = await fetch('https://web-production-cfe1.up.railway.app/api/trpc/edital.uploadFile', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-              json: { fileUrl: uploadData.url }
-            })
-          });
-          
-          if(!extractRes.ok) throw new Error('Erro na extração');
-          const extractData = await extractRes.json();
-          
-          messageSpan.textContent = 'Processando com IA...';
-          
-          // 3. Criar edital e processar
-          const createRes = await fetch('https://web-production-cfe1.up.railway.app/api/trpc/edital.create', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-              json: {
-                title,
-                institution,
-                examDate: new Date(examDate).toISOString(),
-                originalText: extractData.result.data.text,
-                fileUrl: uploadData.url
-              },
-              meta: {
-                values: {
-                  examDate: ["Date"]
-                }
-              }
-            })
-          });
-          
-          if(!createRes.ok) throw new Error('Erro ao criar edital');
-          
-          messageSpan.textContent = '✅ Edital criado e processamento iniciado!';
-          setTimeout(() => {
-            statusDiv.classList.add('hidden');
-            fileInput.value = '';
-            document.getElementById('edital-title').value = '';
-            document.getElementById('edital-institution').value = '';
-            document.getElementById('edital-date').value = '';
-            loadEditais();
-          }, 2000);
-          
-        } catch(e){
-          messageSpan.textContent = '❌ Erro: ' + e.message;
-          statusDiv.querySelector('.bg-blue-50').classList.remove('bg-blue-50', 'border-blue-200');
-          statusDiv.querySelector('.bg-blue-50, .border-blue-200').classList.add('bg-red-50', 'border-red-200');
-          messageSpan.classList.remove('text-blue-700');
-          messageSpan.classList.add('text-red-700');
-        }
+      document.getElementById('btn-upload-edital').addEventListener('click', () => {
+        alert('Upload de edital (em desenvolvimento)');
       });
 
-      // ========== ORIGINAL TABS (Overview, Sources, Gaps, Raw) ==========
-      async function loadOverview(){
-        const data = await safeFetch(API_BASE + "/admin/harvest/items");
-        const items = data?.items || [];
-        const now = new Date();
-        const dayAgo = new Date(now.getTime() - 24*3600*1000);
-        const weekAgo = new Date(now.getTime() - 7*24*3600*1000);
-        const new24 = items.filter(x => x.fetched_at && new Date(x.fetched_at) >= dayAgo).length;
-        const errors7 = items.filter(x => x.status === 'error' && x.fetched_at && new Date(x.fetched_at) >= weekAgo).length;
-        const unknownLic = items.filter(x => !x.license || x.license === 'unknown').length;
-        const latency = 15 + Math.floor(Math.random()*10);
-        document.getElementById('kpi-new-24h').textContent = new24;
-        document.getElementById('kpi-errors-7d').textContent = errors7;
-        document.getElementById('kpi-unknown-license').textContent = unknownLic;
-        document.getElementById('kpi-latency').textContent = latency;
-
-        const byDay = {};
-        for(const it of items){
-          if(!it.fetched_at) continue;
-          const d = new Date(it.fetched_at).toISOString().slice(0,10);
-          byDay[d] = byDay[d] || {new:0,dedup:0,err:0};
-          if(it.status === 'stored') byDay[d].new++;
-          else if(it.status === 'deduped') byDay[d].dedup++;
-          else if(it.status === 'error') byDay[d].err++;
-        }
-        const labels = Object.keys(byDay).sort().slice(-14);
-        const dsNew = labels.map(d => byDay[d].new);
-        const dsDup = labels.map(d => byDay[d].dedup);
-        const dsErr = labels.map(d => byDay[d].err);
-        renderDailyChart(labels, dsNew, dsDup, dsErr);
-      }
-
-      let chartDaily;
-      function renderDailyChart(labels, newArr, dupArr, errArr){
-        const ctx = document.getElementById('chartDaily');
-        if(chartDaily) chartDaily.destroy();
-        chartDaily = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels,
-            datasets: [
-              { label: 'Novos', data: newArr },
-              { label: 'Dedup', data: dupArr },
-              { label: 'Erros', data: errArr }
-            ]
-          },
-          options: {
-            responsive: true,
-            interaction: { mode: 'index', intersect: false },
-            plugins: { legend: { position: 'bottom' } },
-            scales: { y: { beginAtZero: true } }
-          }
-        });
-      }
-
-      async function loadSources(){
-        const data = await safeFetch(API_BASE + "/discover/sources");
-        const tbody = document.getElementById('tbl-sources');
-        tbody.innerHTML = "";
-        const items = data?.items || [];
-        if(items.length===0){
-          const tr = document.createElement('tr');
-          tr.innerHTML = '<td colspan="7" class="py-3 text-slate-500">Sem dados disponíveis</td>';
-          tbody.appendChild(tr);
+      // ========== SUBJECTS ==========
+      async function loadSubjects(){
+        const data = await safeFetch(API_BASE + "/api/subjects");
+        const grid = document.getElementById('subjects-grid');
+        grid.innerHTML = "";
+        
+        const subjects = data?.subjects || [];
+        if(subjects.length === 0){
+          grid.innerHTML = '<p class="col-span-2 text-center text-slate-500">Nenhuma matéria cadastrada</p>';
           return;
         }
-        for(const s of items){
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td class="py-2 font-medium">${s.name||'-'}</td>
-            <td>${s.type||'-'}</td>
-            <td class="hidden md:table-cell"><a class="text-blue-600 hover:underline" href="${s.url_root||'#'}" target="_blank">${s.url_root||''}</a></td>
-            <td>${s.priority||'-'}</td>
-            <td>${s.last_checked_at||'-'}</td>
-            <td><span class="pill">${s.license_hint||'?'}</span></td>
-            <td>${s.allowed===false? '❌':'✅'}</td>
-          `;
-          tbody.appendChild(tr);
-        }
-      }
 
-      async function loadGaps(){
-        const w = document.getElementById('sel-window').value;
-        document.getElementById('gap-window').textContent = w;
-        const subj = document.getElementById('inp-subject').value || "";
-        const base = C.IC_ENGINE_BASE_URL || API_BASE;
-        let url = base + "/coverage/gaps?window=" + encodeURIComponent(w);
-        if(subj) url += "&subject=" + encodeURIComponent(subj);
-        const data = await safeFetch(url);
-        const tbody = document.getElementById('tbl-gaps');
-        tbody.innerHTML = "";
-        const items = data?.items || [];
-        if(items.length===0){
-          const tr = document.createElement('tr');
-          tr.innerHTML = '<td colspan="3" class="py-3 text-slate-500">Sem dados disponíveis</td>';
-          tbody.appendChild(tr);
-          return;
-        }
-        for(const g of items){
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td class="py-2">${g.subtopic||g.subtema||'-'}</td>
-            <td class="mono">${(g.ic12m ?? g.ic ?? 0).toFixed ? (g.ic12m||g.ic).toFixed(1) : g.ic12m||g.ic||0}</td>
-            <td class="mono">${g.qtd||g.questoes||0}</td>
-          `;
-          tbody.appendChild(tr);
-        }
-      }
-
-      async function loadRaw(){
-        const data = await safeFetch(API_BASE + "/admin/harvest/items");
-        const items = data?.items || [];
-        const list = document.getElementById('list-raw');
-        list.innerHTML = "";
-        for(const it of items){
-          const div = document.createElement('div');
-          div.className = "rounded-xl border bg-white p-3";
-          div.innerHTML = `
-            <div class="text-sm flex items-center justify-between">
-              <span class="font-medium">${it.source?.toUpperCase()||'-'}</span>
-              <span class="text-xs pill">${it.status||'-'}</span>
+        for(const s of subjects){
+          const card = document.createElement('div');
+          card.className = "card";
+          card.innerHTML = `
+            <div class="flex items-start justify-between mb-2">
+              <h3 class="font-semibold">${s.name}</h3>
+              <span class="pill" style="background-color: ${s.color || '#ccc'}22; border-color: ${s.color || '#ccc'};">Peso ${s.weight || 1}</span>
             </div>
-            <div class="text-sm mt-1">${it.title||'(sem título)'}</div>
-            <div class="text-xs text-slate-500 mt-1">${it.fetched_at||'-'}</div>
-            <div class="mt-1 text-xs truncate"><a class="text-blue-600 hover:underline" target="_blank" href="${it.url}">${it.url}</a></div>
+            <p class="text-xs text-slate-500">${s.edital_title || 'Sem edital'}</p>
+            <div class="mt-3 flex gap-2">
+              <button onclick="editSubject(${s.id})" class="text-blue-600 hover:underline text-xs">Editar</button>
+              <button onclick="viewTopics(${s.id})" class="text-green-600 hover:underline text-xs">Ver Tópicos</button>
+            </div>
+          `;
+          grid.appendChild(card);
+        }
+      }
+
+      window.editSubject = function(id){
+        alert('Editar matéria #' + id + ' (em desenvolvimento)');
+      };
+
+      window.viewTopics = function(subjectId){
+        document.getElementById('filter-subject').value = subjectId;
+        tabs[4].click(); // Go to topics tab
+      };
+
+      document.getElementById('btn-add-subject').addEventListener('click', () => {
+        alert('Adicionar nova matéria (em desenvolvimento)');
+      });
+
+      // ========== TOPICS ==========
+      async function loadTopics(){
+        const data = await safeFetch(API_BASE + "/api/topics");
+        const list = document.getElementById('topics-list');
+        list.innerHTML = "";
+        
+        const topics = data?.topics || [];
+        if(topics.length === 0){
+          list.innerHTML = '<p class="text-center text-slate-500">Nenhum tópico cadastrado</p>';
+          return;
+        }
+
+        for(const t of topics){
+          const div = document.createElement('div');
+          div.className = "card";
+          div.innerHTML = `
+            <div class="flex items-center justify-between">
+              <div>
+                <h4 class="font-medium">${t.name}</h4>
+                <p class="text-xs text-slate-500">${t.subject_name || 'Sem matéria'} • ${t.estimated_concepts || 0} conceitos</p>
+              </div>
+              <div class="flex gap-2">
+                <button onclick="editTopic(${t.id})" class="text-blue-600 hover:underline text-xs">Editar</button>
+                <button onclick="viewSubtopics(${t.id})" class="text-green-600 hover:underline text-xs">Ver Subtópicos</button>
+              </div>
+            </div>
           `;
           list.appendChild(div);
         }
       }
 
-      document.getElementById('btn-refresh-gaps').addEventListener('click', loadGaps);
-      document.getElementById('btn-refresh-raw').addEventListener('click', loadRaw);
+      window.editTopic = function(id){
+        alert('Editar tópico #' + id + ' (em desenvolvimento)');
+      };
 
-      // Initial loads
-      loadEditais();
-      loadOverview();
-      loadSources();
-      loadGaps();
-      loadRaw();
+      window.viewSubtopics = function(topicId){
+        document.getElementById('filter-topic').value = topicId;
+        tabs[5].click(); // Go to subtopics tab
+      };
+
+      document.getElementById('btn-add-topic').addEventListener('click', () => {
+        alert('Adicionar novo tópico (em desenvolvimento)');
+      });
+
+      // ========== SUBTOPICS ==========
+      async function loadSubtopics(){
+        const data = await safeFetch(API_BASE + "/api/subtopics");
+        const list = document.getElementById('subtopics-list');
+        list.innerHTML = "";
+        
+        const subtopics = data?.subtopics || [];
+        if(subtopics.length === 0){
+          list.innerHTML = '<p class="text-center text-slate-500">Nenhum subtópico cadastrado</p>';
+          return;
+        }
+
+        for(const st of subtopics){
+          const div = document.createElement('div');
+          div.className = "card";
+          div.innerHTML = `
+            <div class="flex items-center justify-between">
+              <div>
+                <h4 class="font-medium">${st.name}</h4>
+                <p class="text-xs text-slate-500">${st.topic_name || 'Sem tópico'} • ${st.estimated_concepts || 0} conceitos</p>
+              </div>
+              <button onclick="editSubtopic(${st.id})" class="text-blue-600 hover:underline text-xs">Editar</button>
+            </div>
+          `;
+          list.appendChild(div);
+        }
+      }
+
+      window.editSubtopic = function(id){
+        alert('Editar subtópico #' + id + ' (em desenvolvimento)');
+      };
+
+      document.getElementById('btn-add-subtopic').addEventListener('click', () => {
+        alert('Adicionar novo subtópico (em desenvolvimento)');
+      });
+
+      // ========== STATS ==========
+      async function loadStats(){
+        const stats = await safeFetch(API_BASE + "/api/stats");
+        if(!stats) return;
+        
+        document.getElementById('stat-categories').textContent = stats.categories || 0;
+        document.getElementById('stat-contests').textContent = stats.contests || 0;
+        document.getElementById('stat-editals').textContent = stats.editals || 0;
+        document.getElementById('stat-subjects').textContent = stats.subjects || 0;
+      }
+
+      // ========== HARVESTER ==========
+      document.getElementById('btn-run-harvest').addEventListener('click', async () => {
+        if(!confirm('Executar coleta automática de provas?')) return;
+        alert('Coleta iniciada (em desenvolvimento)');
+      });
+
+      document.getElementById('btn-view-harvest-items').addEventListener('click', () => {
+        alert('Ver itens coletados (em desenvolvimento)');
+      });
     </script>
   </body>
 </html>
