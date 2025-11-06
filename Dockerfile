@@ -2,6 +2,9 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Install poppler-utils for PDF text extraction
+RUN apk add --no-cache poppler-utils
+
 # Copy package files
 COPY package.json pnpm-lock.yaml* ./
 
