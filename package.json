@@ -1,12 +1,13 @@
 {
-  "name": "memodrops-processing",
+  "name": "memodrops-backoffice",
   "version": "1.0.0",
-  "private": true,
+  "description": "MemoDrops Backoffice - Sistema de coleta e processamento de editais",
+  "main": "dist/server.js",
   "type": "module",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "dev": "ts-node src/index.ts"
+    "build": "tsc -p tsconfig.json && mkdir -p dist/db && cp src/db/schema.sql dist/db/ && mkdir -p dist/migrations && cp migrations/*.sql dist/migrations/ 2>/dev/null || true",
+    "start": "node dist/server.js",
+    "dev": "tsx src/server.ts"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -18,10 +19,17 @@
     "pg": "^8.11.3"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/node": "^20.11.30",
+    "@types/node-cron": "^3.0.11",
     "@types/node-fetch": "^3.0.3",
+    "@types/pg": "^8.11.6",
     "ts-node": "^10.9.2",
+    "tsx": "^4.16.2",
     "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=20.x"
   }
 }
