@@ -3,7 +3,7 @@ import { harvestFGV } from '../adapters/fgv.js';
 import { harvestCebraspe } from '../adapters/ceb.js';
 import { harvestDOU } from '../adapters/dou.js';
 import { harvestPlanalto } from '../adapters/planalto.js';
-import { harvestLexML } from '../adapters/lexml.js';
+// import { harvestLexML } from '../adapters/lexml.js'; // Desativado temporariamente por gerar muitos erros
 import { harvestFCC } from '../adapters/fcc.js';
 import { harvestVunesp } from '../adapters/vunesp.js';
 import { harvestQuadrix } from '../adapters/quadrix.js';
@@ -17,6 +17,7 @@ import { harvestFGD } from '../adapters/fgd.js';
 import { harvestIBAM } from '../adapters/ibam.js';
 import { harvestConcursosNoBrasil } from '../adapters/concursosnobrasil.js';
 import { harvestGovBR } from '../adapters/govbr.js';
+import { harvestPCI } from '../adapters/pci.js';
 import { query } from '../db/index.js';
 import { isDuplicate } from '../pipeline/dedupe.js';
 import { detectPII } from '../compliance/pii-detector.js';
@@ -33,7 +34,7 @@ export async function runAll() {
     const sources = [
         { name: 'DOU', fn: harvestDOU },
         { name: 'Planalto', fn: harvestPlanalto },
-        { name: 'LexML', fn: harvestLexML },
+        // { name: 'LexML', fn: harvestLexML }, // Desativado temporariamente por gerar muitos erros
         { name: 'FGV', fn: harvestFGV },
         { name: 'CESPE', fn: harvestCebraspe },
         { name: 'FCC', fn: harvestFCC },
@@ -49,6 +50,7 @@ export async function runAll() {
         { name: 'IBAM', fn: harvestIBAM },
         { name: 'ConcursosNoBrasil', fn: harvestConcursosNoBrasil },
         { name: 'GovBr', fn: harvestGovBR },
+        { name: 'PCI', fn: harvestPCI },
     ];
     for (const { name, fn } of sources) {
         try {

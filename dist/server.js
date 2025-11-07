@@ -20,6 +20,7 @@ import processRouter from './routes/process.js';
 import errorsRouter from './routes/errors.js';
 import processV2Router from './routes/process-v2.js';
 import testV2Router from './routes/test-v2.js';
+import processV3Router from './routes/process-v3.js';
 // Criar diretório para uploads se não existir
 // Usar /data/uploads para persistência via Railway Volume
 const uploadsDir = process.env.UPLOAD_DIR || '/data/uploads';
@@ -90,6 +91,8 @@ app.use(errorsRouter);
 app.use(processV2Router);
 // Test V2 endpoints
 app.use(testV2Router);
+// Process V3 endpoints (com microserviços)
+app.use(processV3Router);
 // Institutions endpoints
 console.log('[DEBUG] Registering institutions router...');
 app.use('/api/institutions', institutionsRouter);
