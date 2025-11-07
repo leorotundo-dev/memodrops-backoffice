@@ -42,13 +42,13 @@ async function extractStructure(item: HarvestItem): Promise<StructuredContent | 
 
     // Otimização: reduzir tamanho do conteúdo baseado no tamanho real
     const maxContentLength = item.content_text.length < 500 ? item.content_text.length : 3000;
-    const content = item.content_text.substring(0, maxContentLength);
+    const contentText = item.content_text.substring(0, maxContentLength);
 
     // Prompt compacto para economizar tokens
     const prompt = `Extraia estrutura JSON do concurso:
 Título: ${item.title}
 Fonte: ${item.source}
-Conteúdo: ${content}
+Conteúdo: ${contentText}
 
 Retorne: {contestName, category(legislativo|judiciario|executivo|seguranca|fiscal|educacao|saude|outro), subjects[{name, topics[]}], examDate?, institution?, positions?, salary?}
 Se não for concurso: null`;
