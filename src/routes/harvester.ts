@@ -101,7 +101,29 @@ router.post('/api/harvester/ingest', async (req, res) => {
 
     const contestId = contestResult.rows[0].id;
 
-    // 3. Criar subjects e topics
+    // 3. Criar edital associado ao concurso
+    const editalTitle = `Edital - ${structure.contestName}`;
+    const editalSlug = `edital-${contestSlug}`;
+    
+    const editalResult = await query(
+      `INSERT INTO editals 
+       (contest_id, title, slug, number, status, created_at)
+       VALUES ($1, $2, $3, $4, 'open', NOW())
+       ON CONFLICT (contest_id, slug) DO UPDATE SET
+         title = EXCLUDED.title,
+         number = EXCLUDED.number
+       RETURNING id`,
+      [
+        contestId,
+        editalTitle,
+        editalSlug,
+        `001/${new Date().getFullYear()}` // Número padrão
+      ]
+    );
+
+    const editalId = editalResult.rows[0].id;
+
+    // 4. Criar subjects e topics
     for (const subject of structure.subjects) {
       const subjectSlug = subject.name
         .toLowerCase()
@@ -120,6 +142,14 @@ router.post('/api/harvester/ingest', async (req, res) => {
       );
 
       const subjectId = subjectResult.rows[0].id;
+
+      // Associar matéria ao edital
+      await query(
+        `INSERT INTO edital_subjects (edital_id, subject_id, created_at)
+         VALUES ($1, $2, NOW())
+         ON CONFLICT (edital_id, subject_id) DO NOTHING`,
+        [editalId, subjectId]
+      );
 
       // Criar topics
       for (let i = 0; i < subject.topics.length; i++) {
