@@ -9,6 +9,7 @@ import { Request, Response } from 'express';
 import multer from 'multer';
 import fs from 'fs/promises';
 import path from 'path';
+import { PDFDocument } from 'pdf-lib';
 
 // Diretório para uploads (persistente via Railway Volume)
 // Railway monta volumes em /data, então usamos /data/uploads
@@ -46,8 +47,38 @@ export async function handleUpload(req: Request, res: Response) {
     // Criar diretório se não existir
     await fs.mkdir(UPLOAD_DIR, { recursive: true });
 
+    // Comprimir PDF antes de salvar
+    let finalBuffer = file.buffer;
+    let compressionRatio = 0;
+    
+    try {
+      const pdfDoc = await PDFDocument.load(file.buffer);
+      
+      // Remover metadados desnecessários para reduzir tamanho
+      pdfDoc.setTitle('');
+      pdfDoc.setAuthor('');
+      pdfDoc.setSubject('');
+      pdfDoc.setKeywords([]);
+      pdfDoc.setProducer('');
+      pdfDoc.setCreator('');
+      
+      // Salvar com compressão
+      const compressedBytes = await pdfDoc.save({ useObjectStreams: true });
+      
+      compressionRatio = ((file.size - compressedBytes.length) / file.size * 100);
+      
+      if (compressedBytes.length < file.size) {
+        finalBuffer = Buffer.from(compressedBytes);
+        console.log(`[Upload] PDF comprimido: ${file.size} -> ${compressedBytes.length} bytes (${compressionRatio.toFixed(1)}% redução)`);
+      } else {
+        console.log('[Upload] Compressão não reduziu tamanho, usando original');
+      }
+    } catch (compressError) {
+      console.warn('[Upload] Erro ao comprimir PDF, usando original:', compressError);
+    }
+    
     // Salvar arquivo localmente
-    await fs.writeFile(filePath, file.buffer);
+    await fs.writeFile(filePath, finalBuffer);
 
     // Construir URL pública
     const baseUrl = process.env.RAILWAY_PUBLIC_DOMAIN 
@@ -69,7 +100,9 @@ export async function handleUpload(req: Request, res: Response) {
       url, 
       filePath,
       fileName,
-      size: file.size,
+      size: finalBuffer.length,
+      originalSize: file.size,
+      compressionRatio: compressionRatio.toFixed(1) + '%',
       mimeType: file.mimetype,
     });
   } catch (error) {

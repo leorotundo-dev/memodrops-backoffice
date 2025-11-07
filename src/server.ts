@@ -4,6 +4,7 @@ import cron from 'node-cron';
 import fs from 'fs';
 import { runAll } from './jobs/harvest.js';
 import { processHarvestItems } from './jobs/process-content.js';
+import { runCleanup } from './jobs/cleanup-files.js';
 import { query } from './db/index.js';
 import { calculateIC, getTopicGaps } from './ic-engine/calculator.js';
 import { setupRouter } from './setup-endpoint.js';
@@ -18,6 +19,21 @@ import costsRouter from './routes/costs.js';
 // Criar diretório para uploads se não existir
 // Usar /data/uploads para persistência via Railway Volume
 const uploadsDir = process.env.UPLOAD_DIR || '/data/uploads';
+
+// Iniciar job de limpeza automática
+if (process.env.NODE_ENV === 'production') {
+  // Executar limpeza inicial após 5 minutos
+  setTimeout(() => {
+    runCleanup().catch(err => console.error('[Cleanup] Erro na limpeza inicial:', err));
+  }, 5 * 60 * 1000);
+  
+  // Agendar limpeza diária
+  setInterval(() => {
+    runCleanup().catch(err => console.error('[Cleanup] Erro na limpeza agendada:', err));
+  }, 24 * 60 * 60 * 1000);
+  
+  console.log('✅ Job de limpeza automática agendado (a cada 24h)');
+}
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
   console.log(`✅ Created uploads directory: ${uploadsDir}`);

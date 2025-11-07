@@ -64,6 +64,16 @@ router.get('/metrics', async (req, res) => {
     `);
     const dbSizeMB = parseInt(dbSizeResult.rows[0]?.size || '0') / (1024 * 1024);
     
+    // Calcular uso do volume de uploads
+    const { execSync } = require('child_process');
+    let uploadsSizeMB = 0;
+    try {
+      const output = execSync('du -sm /data/uploads 2>/dev/null || echo "0"').toString();
+      uploadsSizeMB = parseFloat(output.split('\t')[0]) || 0;
+    } catch (e) {
+      uploadsSizeMB = 0;
+    }
+    
     // Plano Railway (exemplo - ajustar conforme seu plano real)
     const railwayPlan = process.env.RAILWAY_PLAN || 'Hobby';
     const railwayMonthlyLimit = railwayPlan === 'Hobby' ? 5 : 20; // USD
@@ -87,8 +97,8 @@ router.get('/metrics', async (req, res) => {
       },
       storage: {
         database: Math.round(dbSizeMB * 100) / 100,
-        files: 0, // Não temos upload de arquivos ainda
-        limit: 1024, // 1GB limite exemplo
+        files: Math.round(uploadsSizeMB * 100) / 100,
+        limit: 5120, // 5GB limite para volume
       },
       monthly: {
         total: Math.round(totalCost * 100) / 100,
