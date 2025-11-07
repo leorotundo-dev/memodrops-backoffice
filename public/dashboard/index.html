@@ -37,6 +37,7 @@
           <p class="text-sm text-slate-500">Gestão hierárquica de conteúdo educacional</p>
         </div>
         <div class="flex items-center gap-3">
+          <button onclick="showUtilityTab('institutions')" class="btn-secondary btn-sm">🏛️ Bancas</button>
           <button onclick="showUtilityTab('harvester')" class="btn-secondary btn-sm">🤖 Harvester</button>
           <button onclick="showUtilityTab('stats')" class="btn-secondary btn-sm">📊 Estatísticas</button>
           <button onclick="showUtilityTab('costs')" class="btn-secondary btn-sm">💰 Custos</button>
@@ -461,7 +462,10 @@
         const title = document.getElementById('utility-title');
         const content = document.getElementById('utility-content');
 
-        if (tab === 'harvester') {
+        if (tab === 'institutions') {
+          title.textContent = '🏛️ Bancas Organizadoras';
+          loadInstitutions();
+        } else if (tab === 'harvester') {
           title.textContent = '🤖 Harvester';
           content.innerHTML = '<p class="text-slate-500">Conteúdo do Harvester (implementar)</p>';
         } else if (tab === 'stats') {
@@ -497,6 +501,240 @@
           content.innerHTML = html;
         } catch (err) {
           content.innerHTML = '<p class="text-red-600">Erro ao carregar custos</p>';
+        }
+      }
+
+      // ========================================
+      // INSTITUTIONS (BANCAS)
+      // ========================================
+      async function loadInstitutions() {
+        const content = document.getElementById('utility-content');
+        content.innerHTML = '<p class="text-slate-500">Carregando bancas...</p>';
+
+        try {
+          const [listRes, statsRes] = await Promise.all([
+            fetch('/api/institutions'),
+            fetch('/api/institutions/stats')
+          ]);
+          
+          const listData = await listRes.json();
+          const statsData = await statsRes.json();
+          
+          const institutions = listData.data || [];
+          const stats = statsData.data?.stats || {};
+          const topInstitutions = statsData.data?.top_institutions || [];
+          
+          let html = `
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <div class="card">
+                <div class="text-sm text-slate-500">Total de Bancas</div>
+                <div class="text-2xl font-bold">${stats.total_institutions || 0}</div>
+              </div>
+              <div class="card">
+                <div class="text-sm text-slate-500">Bancas Ativas</div>
+                <div class="text-2xl font-bold text-green-600">${stats.active_institutions || 0}</div>
+              </div>
+              <div class="card">
+                <div class="text-sm text-slate-500">Bancas Examinadoras</div>
+                <div class="text-2xl font-bold text-blue-600">${stats.exam_boards || 0}</div>
+              </div>
+              <div class="card">
+                <div class="text-sm text-slate-500">Total de Concursos</div>
+                <div class="text-2xl font-bold text-purple-600">${stats.total_contests || 0}</div>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-semibold">Todas as Bancas</h3>
+              <button onclick="showAddInstitutionModal()" class="btn-primary btn-sm">➕ Nova Banca</button>
+            </div>
+
+            <!-- Institutions Table -->
+            <div class="card overflow-hidden p-0">
+              <table class="w-full">
+                <thead class="bg-slate-50 border-b">
+                  <tr>
+                    <th class="text-left p-4 text-sm font-medium text-slate-700">Nome</th>
+                    <th class="text-left p-4 text-sm font-medium text-slate-700">Tipo</th>
+                    <th class="text-left p-4 text-sm font-medium text-slate-700">Concursos</th>
+                    <th class="text-left p-4 text-sm font-medium text-slate-700">Último Concurso</th>
+                    <th class="text-left p-4 text-sm font-medium text-slate-700">Status</th>
+                    <th class="text-left p-4 text-sm font-medium text-slate-700">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+          `;
+          
+          if (institutions.length === 0) {
+            html += `
+              <tr>
+                <td colspan="6" class="p-8 text-center text-slate-500">
+                  Nenhuma banca cadastrada
+                </td>
+              </tr>
+            `;
+          } else {
+            institutions.forEach(inst => {
+              const typeLabels = {
+                'exam_board': '🏛️ Banca',
+                'government': '🏛️ Órgão Público',
+                'university': '🎓 Universidade',
+                'other': '💼 Outro'
+              };
+              
+              const typeLabel = typeLabels[inst.type] || inst.type;
+              const contestCount = inst.contest_count || 0;
+              const latestExam = inst.latest_exam_date 
+                ? new Date(inst.latest_exam_date).toLocaleDateString('pt-BR')
+                : '-';
+              const statusBadge = inst.is_active
+                ? '<span class="pill bg-green-50 text-green-700 border-green-200">● Ativa</span>'
+                : '<span class="pill bg-slate-50 text-slate-500 border-slate-200">Inativa</span>';
+              
+              html += `
+                <tr class="border-b hover:bg-slate-50">
+                  <td class="p-4">
+                    <div class="font-medium">${inst.name}</div>
+                    ${inst.full_name && inst.full_name !== inst.name ? `<div class="text-xs text-slate-500">${inst.full_name}</div>` : ''}
+                  </td>
+                  <td class="p-4 text-sm">${typeLabel}</td>
+                  <td class="p-4 text-sm">
+                    <span class="font-semibold">${contestCount}</span>
+                  </td>
+                  <td class="p-4 text-sm text-slate-600">${latestExam}</td>
+                  <td class="p-4">${statusBadge}</td>
+                  <td class="p-4">
+                    <div class="flex items-center gap-2">
+                      <button onclick="viewInstitution(${inst.id})" class="text-blue-600 hover:text-blue-800 text-sm">👁️ Ver</button>
+                      <button onclick="editInstitution(${inst.id})" class="text-slate-600 hover:text-slate-800 text-sm">✏️ Editar</button>
+                    </div>
+                  </td>
+                </tr>
+              `;
+            });
+          }
+          
+          html += `
+                </tbody>
+              </table>
+            </div>
+          `;
+          
+          content.innerHTML = html;
+        } catch (err) {
+          console.error('Erro ao carregar bancas:', err);
+          content.innerHTML = '<p class="text-red-600">Erro ao carregar bancas</p>';
+        }
+      }
+
+      function showAddInstitutionModal() {
+        const name = prompt('Nome da banca:');
+        if (!name) return;
+        
+        const fullName = prompt('Nome completo (opcional):') || name;
+        const website = prompt('Website (opcional):') || '';
+        const type = prompt('Tipo (exam_board/government/university/other):', 'exam_board');
+        
+        addInstitution({ name, full_name: fullName, website, type });
+      }
+
+      async function addInstitution(data) {
+        try {
+          const res = await fetch('/api/institutions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          
+          const result = await res.json();
+          
+          if (result.success) {
+            alert('✅ Banca adicionada com sucesso!');
+            loadInstitutions();
+          } else {
+            alert('❌ Erro: ' + result.error);
+          }
+        } catch (err) {
+          console.error('Erro ao adicionar banca:', err);
+          alert('❌ Erro ao adicionar banca');
+        }
+      }
+
+      async function viewInstitution(id) {
+        try {
+          const res = await fetch(`/api/institutions/${id}`);
+          const data = await res.json();
+          
+          if (data.success) {
+            const inst = data.data.institution;
+            const contests = data.data.contests;
+            
+            let info = `🏛️ ${inst.name}\n`;
+            info += `Nome completo: ${inst.full_name || '-'}\n`;
+            info += `Tipo: ${inst.type}\n`;
+            info += `Website: ${inst.website || '-'}\n`;
+            info += `Status: ${inst.is_active ? 'Ativa' : 'Inativa'}\n`;
+            info += `\nConcursos: ${inst.contest_count}\n`;
+            info += `Editais: ${inst.edital_count}\n`;
+            
+            if (contests.length > 0) {
+              info += `\nÚltimos concursos:\n`;
+              contests.slice(0, 5).forEach(c => {
+                info += `- ${c.title} (${c.exam_date ? new Date(c.exam_date).toLocaleDateString('pt-BR') : 'sem data'})\n`;
+              });
+            }
+            
+            alert(info);
+          }
+        } catch (err) {
+          console.error('Erro ao visualizar banca:', err);
+          alert('❌ Erro ao carregar detalhes da banca');
+        }
+      }
+
+      async function editInstitution(id) {
+        try {
+          const res = await fetch(`/api/institutions/${id}`);
+          const data = await res.json();
+          
+          if (!data.success) {
+            alert('❌ Erro ao carregar banca');
+            return;
+          }
+          
+          const inst = data.data.institution;
+          
+          const name = prompt('Nome:', inst.name);
+          if (!name) return;
+          
+          const fullName = prompt('Nome completo:', inst.full_name || inst.name);
+          const website = prompt('Website:', inst.website || '');
+          const isActive = confirm('Banca ativa?');
+          
+          const updateRes = await fetch(`/api/institutions/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name,
+              full_name: fullName,
+              website,
+              is_active: isActive
+            })
+          });
+          
+          const updateData = await updateRes.json();
+          
+          if (updateData.success) {
+            alert('✅ Banca atualizada com sucesso!');
+            loadInstitutions();
+          } else {
+            alert('❌ Erro: ' + updateData.error);
+          }
+        } catch (err) {
+          console.error('Erro ao editar banca:', err);
+          alert('❌ Erro ao editar banca');
         }
       }
 
