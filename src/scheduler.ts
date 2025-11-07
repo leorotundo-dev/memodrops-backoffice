@@ -3,42 +3,34 @@
  * 
  * Executa jobs periódicos usando node-cron
  * Roda dentro do próprio servidor (não depende de cron externo)
+ * Usa sistema de eventos para encadear jobs automaticamente
  */
 
 import cron from 'node-cron';
-import { runAll } from './jobs/harvest.js';
-import { processHarvestItems } from './jobs/process-content.js';
+import { setupJobQueue, runHarvestWithChain } from './events/jobQueue.js';
 
 console.log('📅 Inicializando scheduler...');
 
-/**
- * Job 1: Coleta de Editais (Harvest)
- * Executa a cada 6 horas
- * Horários: 00:00, 06:00, 12:00, 18:00
- */
-cron.schedule('0 */6 * * *', async () => {
-  console.log('\n⏰ [Scheduler] Iniciando coleta de editais...');
-  try {
-    await runAll();
-    console.log('✅ [Scheduler] Coleta concluída com sucesso');
-  } catch (error) {
-    console.error('❌ [Scheduler] Erro na coleta:', error);
-  }
-}, {
-  timezone: "America/Sao_Paulo"
-});
+// Configurar sistema de dependências entre jobs
+setupJobQueue();
 
 /**
- * Job 2: Processamento de Conteúdo (IA)
- * Executa a cada hora
+ * Job 1: Coleta de Editais (Harvest) com Processamento em Cadeia
+ * Executa a cada 6 horas
+ * Horários: 00:00, 06:00, 12:00, 18:00
+ * 
+ * Quando há novos dados, dispara automaticamente:
+ * - Processamento com IA
+ * - Geração de drops
+ * - Distribuição
  */
-cron.schedule('0 * * * *', async () => {
-  console.log('\n⏰ [Scheduler] Iniciando processamento de conteúdo...');
+cron.schedule('0 */6 * * *', async () => {
+  console.log('\\n⏰ [Scheduler] Iniciando coleta de editais com processamento em cadeia...');
   try {
-    await processHarvestItems();
-    console.log('✅ [Scheduler] Processamento concluído com sucesso');
+    await runHarvestWithChain();
+    console.log('✅ [Scheduler] Coleta concluída (processamento em cadeia iniciado)');
   } catch (error) {
-    console.error('❌ [Scheduler] Erro no processamento:', error);
+    console.error('❌ [Scheduler] Erro na coleta:', error);
   }
 }, {
   timezone: "America/Sao_Paulo"
@@ -47,17 +39,18 @@ cron.schedule('0 * * * *', async () => {
 console.log('✅ Scheduler configurado com sucesso!');
 console.log('📋 Jobs agendados:');
 console.log('   - Coleta de editais: a cada 6 horas (00:00, 06:00, 12:00, 18:00)');
-console.log('   - Processamento (IA): a cada hora');
+console.log('   - Processamento automático: quando há novos dados');
 console.log('   - Timezone: America/Sao_Paulo');
+console.log('🔗 Sistema de dependências ativo: Harvest -> Process -> Generate -> Distribute');
 
 /**
- * Função para executar coleta inicial
+ * Função para executar coleta inicial com processamento em cadeia
  */
 export async function runInitialHarvest() {
-  console.log('\n🚀 Executando coleta inicial...');
+  console.log('\\n🚀 Executando coleta inicial com processamento em cadeia...');
   try {
-    await runAll();
-    console.log('✅ Coleta inicial concluída!');
+    await runHarvestWithChain();
+    console.log('✅ Coleta inicial concluída (processamento em cadeia iniciado)!');
   } catch (error) {
     console.error('❌ Erro na coleta inicial:', error);
   }
