@@ -103,20 +103,15 @@ router.post('/api/harvester/ingest', async (req, res) => {
 
     // 3. Criar edital associado ao concurso
     const editalTitle = `Edital - ${structure.contestName}`;
-    const editalSlug = `edital-${contestSlug}`;
     
     const editalResult = await query(
       `INSERT INTO editals 
-       (contest_id, title, slug, number, status, created_at)
-       VALUES ($1, $2, $3, $4, 'open', NOW())
-       ON CONFLICT (contest_id, slug) DO UPDATE SET
-         title = EXCLUDED.title,
-         number = EXCLUDED.number
+       (contest_id, title, edital_number, status, created_at)
+       VALUES ($1, $2, $3, 'completed', NOW())
        RETURNING id`,
       [
         contestId,
         editalTitle,
-        editalSlug,
         `001/${new Date().getFullYear()}` // Número padrão
       ]
     );
@@ -134,22 +129,14 @@ router.post('/api/harvester/ingest', async (req, res) => {
 
       const subjectResult = await query(
         `INSERT INTO subjects 
-         (contest_id, name, slug, display_order, created_at)
+         (edital_id, name, slug, display_order, created_at)
          VALUES ($1, $2, $3, 0, NOW())
-         ON CONFLICT (contest_id, slug) DO UPDATE SET name = EXCLUDED.name
+         ON CONFLICT (edital_id, slug) DO UPDATE SET name = EXCLUDED.name
          RETURNING id`,
-        [contestId, subject.name, subjectSlug]
+        [editalId, subject.name, subjectSlug]
       );
 
       const subjectId = subjectResult.rows[0].id;
-
-      // Associar matéria ao edital
-      await query(
-        `INSERT INTO edital_subjects (edital_id, subject_id, created_at)
-         VALUES ($1, $2, NOW())
-         ON CONFLICT (edital_id, subject_id) DO NOTHING`,
-        [editalId, subjectId]
-      );
 
       // Criar topics
       for (let i = 0; i < subject.topics.length; i++) {

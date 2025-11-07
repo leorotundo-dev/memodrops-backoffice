@@ -152,44 +152,26 @@ router.post('/create-editals', async (req, res) => {
     
     // 1. Criar editais
     const result1 = await query(`
-      INSERT INTO editals (contest_id, title, slug, number, status, created_at)
+      INSERT INTO editals (contest_id, title, edital_number, status, created_at)
       SELECT 
         c.id,
         'Edital - ' || c.title as title,
-        'edital-' || c.slug as slug,
-        '001/' || EXTRACT(YEAR FROM c.created_at) as number,
-        'open' as status,
+        '001/' || EXTRACT(YEAR FROM c.created_at) as edital_number,
+        'completed' as status,
         c.created_at
       FROM contests c
       WHERE NOT EXISTS (
         SELECT 1 FROM editals e WHERE e.contest_id = c.id
       )
-      ON CONFLICT (contest_id, slug) DO NOTHING
       RETURNING id
     `);
     
     const editalsCreated = result1.rowCount;
     console.log(`[Admin] ${editalsCreated} editais criados`);
     
-    // 2. Associar matérias aos editais
-    const result2 = await query(`
-      INSERT INTO edital_subjects (edital_id, subject_id, created_at)
-      SELECT 
-        e.id as edital_id,
-        s.id as subject_id,
-        NOW() as created_at
-      FROM subjects s
-      INNER JOIN editals e ON s.contest_id = e.contest_id
-      WHERE NOT EXISTS (
-        SELECT 1 FROM edital_subjects es 
-        WHERE es.edital_id = e.id AND es.subject_id = s.id
-      )
-      ON CONFLICT (edital_id, subject_id) DO NOTHING
-      RETURNING id
-    `);
-    
-    const associationsCreated = result2.rowCount;
-    console.log(`[Admin] ${associationsCreated} associações criadas`);
+    // 2. Atualizar subjects para apontar para o edital (se necessário)
+    // Nota: subjects já deve ter edital_id no schema correto
+    const associationsCreated = 0;
     
     // 3. Contar total
     const result3 = await query('SELECT COUNT(*) as count FROM editals');
