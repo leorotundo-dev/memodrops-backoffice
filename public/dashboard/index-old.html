@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MemoDrops • Backoffice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="data:,">
+    <style>
+      .card { @apply rounded-2xl border bg-white shadow-sm p-4; }
+      .pill { @apply text-xs px-2 py-0.5 rounded-full border; }
+      .mono { font-variant-numeric: tabular-nums; }
+      .btn-primary { @apply px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition; }
+      .btn-secondary { @apply px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 transition; }
+      .btn-sm { @apply px-3 py-1 text-sm; }
+      .tab-active { @apply border-blue-600 bg-blue-50 font-medium; }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-900">
+    <div class="max-w-7xl mx-auto p-4 space-y-4">
+      <header class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold">MemoDrops • Backoffice</h1>
+          <p class="text-sm text-slate-500">Gestão hierárquica de conteúdo educacional</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <span id="env-status" class="pill bg-green-50 text-green-700 border-green-200">● Online</span>
+        </div>
+      </header>
+
+      <!-- Tabs -->
+      <nav class="flex gap-2 overflow-x-auto pb-2">
+        <button data-tab="categories" class="tab px-4 py-2 rounded-lg border bg-white whitespace-nowrap">📂 Categorias</button>
+        <button data-tab="contests" class="tab px-4 py-2 rounded-lg border bg-white whitespace-nowrap">🎯 Concursos</button>
+        <button data-tab="editals" class="tab px-4 py-2 rounded-lg border bg-white whitespace-nowrap">📄 Editais</button>
+        <button data-tab="subjects" class="tab px-4 py-2 rounded-lg border bg-white whitespace-nowrap">📚 Matérias</button>
+        <button data-tab="topics" class="tab px-4 py-2 rounded-lg border bg-white whitespace-nowrap">📝 Tópicos</button>
+        <button data-tab="subtopics" class="tab px-4 py-2 rounded-lg border bg-white whitespace-nowrap">🔍 Subtópicos</button>
+        <button data-tab="harvester" class="tab px-4 py-2 rounded-lg border bg-white whitespace-nowrap">🤖 Harvester</button>
+        <button data-tab="stats" class="tab px-4 py-2 rounded-lg border bg-white whitespace-nowrap">📊 Estatísticas</button>
+        <button data-tab="costs" class="tab px-4 py-2 rounded-lg border bg-white whitespace-nowrap">💰 Custos</button>
+      </nav>
+
+      <!-- ========================================
+           TAB: CATEGORIAS
+           ======================================== -->
+      <section id="tab-categories" class="space-y-4">
+        <div class="card">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold">Categorias de Objetivos</h2>
+            <button id="btn-add-category" class="btn-primary btn-sm">+ Nova Categoria</button>
+          </div>
+          <div class="grid md:grid-cols-3 gap-4" id="categories-grid"></div>
+        </div>
+      </section>
+
+      <!-- ========================================
+           TAB: CONCURSOS
+           ======================================== -->
+      <section id="tab-contests" class="hidden space-y-4">
+        <div class="card">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-lg font-semibold">Concursos e Provas</h2>
+              <p class="text-sm text-slate-500">Filtrar por categoria:</p>
+              <select id="filter-category" class="mt-2 border rounded-lg px-3 py-2">
+                <option value="">Todas as categorias</option>
+              </select>
+            </div>
+            <button id="btn-add-contest" class="btn-primary btn-sm">+ Novo Concurso</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="text-left text-slate-500 border-b">
+                <tr>
+                  <th class="py-3 px-2">ID</th>
+                  <th class="py-3 px-2">Categoria</th>
+                  <th class="py-3 px-2">Título</th>
+                  <th class="py-3 px-2">Instituição</th>
+                  <th class="py-3 px-2">Data</th>
+                  <th class="py-3 px-2">Vagas</th>
+                  <th class="py-3 px-2">Status</th>
+                  <th class="py-3 px-2">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tbl-contests"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================
+           TAB: EDITAIS
+           ======================================== -->
+      <section id="tab-editals" class="hidden space-y-4">
+        <div class="card">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-lg font-semibold">Editais</h2>
+              <p class="text-sm text-slate-500">Filtrar por concurso:</p>
+              <select id="filter-contest" class="mt-2 border rounded-lg px-3 py-2">
+                <option value="">Todos os concursos</option>
+              </select>
+            </div>
+            <button id="btn-upload-edital" class="btn-primary btn-sm">📤 Upload de Edital</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="text-left text-slate-500 border-b">
+                <tr>
+                  <th class="py-3 px-2">ID</th>
+                  <th class="py-3 px-2">Concurso</th>
+                  <th class="py-3 px-2">Título</th>
+                  <th class="py-3 px-2">Número</th>
+                  <th class="py-3 px-2">Status</th>
+                  <th class="py-3 px-2">Matérias</th>
+                  <th class="py-3 px-2">Criado em</th>
+                  <th class="py-3 px-2">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tbl-editals"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================
+           TAB: MATÉRIAS
+           ======================================== -->
+      <section id="tab-subjects" class="hidden space-y-4">
+        <div class="card">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-lg font-semibold">Matérias</h2>
+              <p class="text-sm text-slate-500">Filtrar por edital:</p>
+              <select id="filter-edital" class="mt-2 border rounded-lg px-3 py-2">
+                <option value="">Todos os editais</option>
+              </select>
+            </div>
+            <button id="btn-add-subject" class="btn-primary btn-sm">+ Nova Matéria</button>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4" id="subjects-grid"></div>
+        </div>
+      </section>
+
+      <!-- ========================================
+           TAB: TÓPICOS
+           ======================================== -->
+      <section id="tab-topics" class="hidden space-y-4">
+        <div class="card">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-lg font-semibold">Tópicos</h2>
+              <p class="text-sm text-slate-500">Filtrar por matéria:</p>
+              <select id="filter-subject" class="mt-2 border rounded-lg px-3 py-2">
+                <option value="">Todas as matérias</option>
+              </select>
+            </div>
+            <button id="btn-add-topic" class="btn-primary btn-sm">+ Novo Tópico</button>
+          </div>
+          <div class="space-y-2" id="topics-list"></div>
+        </div>
+      </section>
+
+      <!-- ========================================
+           TAB: SUBTÓPICOS
+           ======================================== -->
+      <section id="tab-subtopics" class="hidden space-y-4">
+        <div class="card">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-lg font-semibold">Subtópicos</h2>
+              <p class="text-sm text-slate-500">Filtrar por tópico:</p>
+              <select id="filter-topic" class="mt-2 border rounded-lg px-3 py-2">
+                <option value="">Todos os tópicos</option>
+              </select>
+            </div>
+            <button id="btn-add-subtopic" class="btn-primary btn-sm">+ Novo Subtópico</button>
+          </div>
+          <div class="space-y-2" id="subtopics-list"></div>
+        </div>
+      </section>
+
+      <!-- ========================================
+           TAB: HARVESTER
+           ======================================== -->
+      <section id="tab-harvester" class="hidden space-y-4">
+        <div class="card">
+          <h2 class="text-lg font-semibold mb-4">Coleta Automática de Provas</h2>
+          <p class="text-slate-600 mb-4">Configure e execute a coleta automática de provas antigas das bancas.</p>
+          <div class="flex gap-2">
+            <button id="btn-run-harvest" class="btn-primary">▶️ Executar Coleta</button>
+            <button id="btn-view-harvest-items" class="btn-secondary">📋 Ver Itens Coletados</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================
+           TAB: ESTATÍSTICAS
+           ======================================== -->
+      <section id="tab-stats" class="hidden space-y-4">
+        <div class="grid md:grid-cols-4 gap-3">
+          <div class="card">
+            <div class="text-sm text-slate-500">Categorias</div>
+            <div id="stat-categories" class="text-2xl font-semibold mono">—</div>
+          </div>
+          <div class="card">
+            <div class="text-sm text-slate-500">Concursos</div>
+            <div id="stat-contests" class="text-2xl font-semibold mono">—</div>
+          </div>
+          <div class="card">
+            <div class="text-sm text-slate-500">Editais</div>
+            <div id="stat-editals" class="text-2xl font-semibold mono">—</div>
+          </div>
+          <div class="card">
+            <div class="text-sm text-slate-500">Matérias</div>
+            <div id="stat-subjects" class="text-2xl font-semibold mono">—</div>
+          </div>
+        </div>
+        <div class="card">
+          <h3 class="font-semibold mb-3">Hierarquia Completa</h3>
+          <div id="hierarchy-tree" class="text-sm space-y-1"></div>
+        </div>
+      </section>
+
+      <!-- ========================================
+           TAB: CUSTOS
+           ======================================== -->
+      <section id="tab-costs" class="hidden space-y-4">
+        <!-- Cards de Resumo -->
+        <div class="grid md:grid-cols-4 gap-3">
+          <div class="card bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+            <div class="text-sm text-blue-700 font-medium">Custo Mensal Total</div>
+            <div id="cost-total" class="text-3xl font-bold text-blue-900 mono">R$ —</div>
+            <div class="text-xs text-blue-600 mt-1">Todas as integrações</div>
+          </div>
+          <div class="card">
+            <div class="text-sm text-slate-500">OpenAI API</div>
+            <div id="cost-openai" class="text-2xl font-semibold mono">R$ —</div>
+            <div id="cost-openai-tokens" class="text-xs text-slate-500 mt-1">— tokens</div>
+          </div>
+          <div class="card">
+            <div class="text-sm text-slate-500">Railway Hosting</div>
+            <div id="cost-railway" class="text-2xl font-semibold mono">R$ —</div>
+            <div id="cost-railway-plan" class="text-xs text-slate-500 mt-1">Plano: —</div>
+          </div>
+          <div class="card">
+            <div class="text-sm text-slate-500">Armazenamento</div>
+            <div id="cost-storage" class="text-2xl font-semibold mono">— MB</div>
+            <div id="cost-storage-limit" class="text-xs text-slate-500 mt-1">Limite: —</div>
+          </div>
+        </div>
+
+        <!-- Gráfico de Breakdown -->
+        <div class="card">
+          <h3 class="font-semibold mb-4">Distribuição de Custos</h3>
+          <div id="cost-breakdown" class="space-y-3"></div>
+        </div>
+
+        <!-- Limites e Alertas -->
+        <div class="card">
+          <h3 class="font-semibold mb-4">Limites e Uso</h3>
+          <div class="space-y-4">
+            <div>
+              <div class="flex justify-between text-sm mb-1">
+                <span>Railway - Uso Mensal</span>
+                <span id="railway-usage-percent" class="font-medium">0%</span>
+              </div>
+              <div class="w-full bg-slate-200 rounded-full h-2">
+                <div id="railway-usage-bar" class="bg-blue-600 h-2 rounded-full transition-all" style="width: 0%"></div>
+              </div>
+              <div class="flex justify-between text-xs text-slate-500 mt-1">
+                <span id="railway-usage-current">R$ 0</span>
+                <span id="railway-usage-limit">R$ 0</span>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between text-sm mb-1">
+                <span>Armazenamento</span>
+                <span id="storage-usage-percent" class="font-medium">0%</span>
+              </div>
+              <div class="w-full bg-slate-200 rounded-full h-2">
+                <div id="storage-usage-bar" class="bg-green-600 h-2 rounded-full transition-all" style="width: 0%"></div>
+              </div>
+              <div class="flex justify-between text-xs text-slate-500 mt-1">
+                <span id="storage-usage-current">0 MB</span>
+                <span id="storage-usage-limit">0 MB</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Histórico (opcional) -->
+        <div class="card">
+          <h3 class="font-semibold mb-4">Histórico de Custos (30 dias)</h3>
+          <div id="cost-history" class="text-sm text-slate-500">Carregando...</div>
+        </div>
+      </section>
+
+      <footer class="text-xs text-slate-500 py-6">
+        <div>MemoDrops Backoffice • Hierarquia Educacional</div>
+      </footer>
+    </div>
+
+    <script>
+      const API_BASE = window.location.origin;
+
+      // ========== TAB SYSTEM ==========
+      const tabs = document.querySelectorAll('.tab');
+      tabs.forEach(btn => btn.addEventListener('click', () => {
+        document.querySelectorAll('section[id^="tab-"]').forEach(s => s.classList.add('hidden'));
+        document.getElementById('tab-'+btn.dataset.tab).classList.remove('hidden');
+        tabs.forEach(b => b.classList.remove('tab-active'));
+        btn.classList.add('tab-active');
+        
+        // Load data for the selected tab
+        const tabName = btn.dataset.tab;
+        if(tabName === 'categories') loadCategories();
+        else if(tabName === 'contests') loadContests();
+        else if(tabName === 'editals') loadEditals();
+        else if(tabName === 'subjects') loadSubjects();
+        else if(tabName === 'topics') loadTopics();
+        else if(tabName === 'subtopics') loadSubtopics();
+        else if(tabName === 'stats') loadStats();
+        else if(tabName === 'costs') loadCosts();
+      }));
+      
+      // Default: categories
+      tabs[0].click();
+
+      // ========== HELPERS ==========
+      async function safeFetch(url, opt={}){
+        try {
+          const r = await fetch(url, opt);
+          if(!r.ok) throw new Error(r.status+" "+r.statusText);
+          return await r.json();
+        } catch(e){
+          console.warn("fetch fail:", url, e);
+          return null;
+        }
+      }
+
+      // ========== CATEGORIES ==========
+      async function loadCategories(){
+        const data = await safeFetch(API_BASE + "/api/categories");
+        const grid = document.getElementById('categories-grid');
+        grid.innerHTML = "";
+        
+        const categories = data?.categories || [];
+        if(categories.length === 0){
+          grid.innerHTML = '<p class="col-span-3 text-center text-slate-500">Nenhuma categoria cadastrada</p>';
+          return;
+        }
+
+        for(const cat of categories){
+          const card = document.createElement('div');
+          card.className = "card hover:shadow-lg transition cursor-pointer";
+          card.innerHTML = `
+            <div class="text-4xl mb-2">${cat.icon || '📁'}</div>
+            <h3 class="font-semibold">${cat.name}</h3>
+            <p class="text-xs text-slate-500 mt-1">${cat.description || ''}</p>
+            <div class="mt-3 flex gap-2">
+              <button onclick="editCategory(${cat.id})" class="text-blue-600 hover:underline text-xs">Editar</button>
+              <button onclick="deleteCategory(${cat.id})" class="text-red-600 hover:underline text-xs">Excluir</button>
+            </div>
+          `;
+          grid.appendChild(card);
+        }
+      }
+
+      window.editCategory = function(id){
+        alert('Editar categoria #' + id + ' (em desenvolvimento)');
+      };
+
+      window.deleteCategory = function(id){
+        if(!confirm('Excluir categoria #' + id + '?')) return;
+        alert('Exclusão em desenvolvimento');
+      };
+
+      document.getElementById('btn-add-category').addEventListener('click', () => {
+        alert('Adicionar nova categoria (em desenvolvimento)');
+      });
+
+      // ========== CONTESTS ==========
+      async function loadContests(){
+        const data = await safeFetch(API_BASE + "/api/contests");
+        const tbody = document.getElementById('tbl-contests');
+        tbody.innerHTML = "";
+        
+        const contests = data?.contests || [];
+        if(contests.length === 0){
+          tbody.innerHTML = '<tr><td colspan="8" class="py-4 text-center text-slate-500">Nenhum concurso cadastrado</td></tr>';
+          return;
+        }
+
+        for(const c of contests){
+          const tr = document.createElement('tr');
+          const statusColor = {
+            'active': 'bg-green-50 text-green-700 border-green-200',
+            'upcoming': 'bg-blue-50 text-blue-700 border-blue-200',
+            'past': 'bg-gray-50 text-gray-700 border-gray-200',
+            'cancelled': 'bg-red-50 text-red-700 border-red-200'
+          }[c.status] || 'bg-gray-50 text-gray-700 border-gray-200';
+          
+          tr.innerHTML = `
+            <td class="py-3 px-2">#${c.id}</td>
+            <td class="py-3 px-2">${c.category_name || '-'}</td>
+            <td class="py-3 px-2 font-medium">${c.title}</td>
+            <td class="py-3 px-2">${c.institution}</td>
+            <td class="py-3 px-2">${c.exam_date ? new Date(c.exam_date).toLocaleDateString('pt-BR') : '-'}</td>
+            <td class="py-3 px-2">${c.vacancies || '-'}</td>
+            <td class="py-3 px-2"><span class="pill ${statusColor}">${c.status}</span></td>
+            <td class="py-3 px-2">
+              <button onclick="editContest(${c.id})" class="text-blue-600 hover:underline text-xs">Editar</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        }
+      }
+
+      window.editContest = function(id){
+        alert('Editar concurso #' + id + ' (em desenvolvimento)');
+      };
+
+      document.getElementById('btn-add-contest').addEventListener('click', () => {
+        alert('Adicionar novo concurso (em desenvolvimento)');
+      });
+
+      // ========== EDITALS ==========
+      async function loadEditals(){
+        const data = await safeFetch(API_BASE + "/api/editals");
+        const tbody = document.getElementById('tbl-editals');
+        tbody.innerHTML = "";
+        
+        const editals = data?.editals || [];
+        if(editals.length === 0){
+          tbody.innerHTML = '<tr><td colspan="8" class="py-4 text-center text-slate-500">Nenhum edital cadastrado</td></tr>';
+          return;
+        }
+
+        for(const e of editals){
+          const tr = document.createElement('tr');
+          const statusColor = {
+            'pending': 'bg-yellow-50 text-yellow-700 border-yellow-200',
+            'processing': 'bg-blue-50 text-blue-700 border-blue-200',
+            'completed': 'bg-green-50 text-green-700 border-green-200',
+            'error': 'bg-red-50 text-red-700 border-red-200'
+          }[e.status] || 'bg-gray-50 text-gray-700 border-gray-200';
+          
+          tr.innerHTML = `
+            <td class="py-3 px-2">#${e.id}</td>
+            <td class="py-3 px-2">${e.contest_title || '-'}</td>
+            <td class="py-3 px-2 font-medium">${e.title}</td>
+            <td class="py-3 px-2">${e.edital_number || '-'}</td>
+            <td class="py-3 px-2"><span class="pill ${statusColor}">${e.status}</span></td>
+            <td class="py-3 px-2">${e.subjects_count || 0}</td>
+            <td class="py-3 px-2">${e.created_at ? new Date(e.created_at).toLocaleDateString('pt-BR') : '-'}</td>
+            <td class="py-3 px-2">
+              <button onclick="viewEdital(${e.id})" class="text-blue-600 hover:underline text-xs">Ver</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        }
+      }
+
+      window.viewEdital = async function(id){
+        try {
+          const response = await fetch(API_BASE + `/api/editals/${id}`);
+          const data = await response.json();
+          
+          if (!data.success) {
+            alert('❌ Erro ao carregar edital');
+            return;
+          }
+          
+          const edital = data.edital;
+          
+          if (!edital.file_url) {
+            alert('⚠️ Este edital ainda não tem arquivo PDF anexado.\n\nClique em "Upload de Edital" para adicionar.');
+            return;
+          }
+          
+          // Abrir PDF em nova aba
+          window.open(edital.file_url, '_blank');
+        } catch (error) {
+          alert('❌ Erro: ' + error.message);
+        }
+      };
+
+      document.getElementById('btn-upload-edital').addEventListener('click', () => {
+        // Criar input file dinâmico
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'application/pdf';
+        input.onchange = async (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          
+          if (file.type !== 'application/pdf') {
+            alert('❌ Apenas arquivos PDF são permitidos');
+            return;
+          }
+          
+          if (file.size > 10 * 1024 * 1024) {
+            alert('❌ Arquivo muito grande. Máximo: 10MB');
+            return;
+          }
+          
+          const formData = new FormData();
+          formData.append('file', file);
+          
+          try {
+            const response = await fetch(API_BASE + '/api/edital/upload', {
+              method: 'POST',
+              body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+              alert('✅ Upload realizado com sucesso!\n\nURL: ' + result.url);
+              loadEditals(); // Recarregar lista
+            } else {
+              alert('❌ Erro: ' + result.error);
+            }
+          } catch (error) {
+            alert('❌ Erro ao fazer upload: ' + error.message);
+          }
+        };
+        input.click();
+      });
+
+      // ========== SUBJECTS ==========
+      async function loadSubjects(){
+        const data = await safeFetch(API_BASE + "/api/subjects");
+        const grid = document.getElementById('subjects-grid');
+        grid.innerHTML = "";
+        
+        const subjects = data?.subjects || [];
+        if(subjects.length === 0){
+          grid.innerHTML = '<p class="col-span-2 text-center text-slate-500">Nenhuma matéria cadastrada</p>';
+          return;
+        }
+
+        for(const s of subjects){
+          const card = document.createElement('div');
+          card.className = "card";
+          card.innerHTML = `
+            <div class="flex items-start justify-between mb-2">
+              <h3 class="font-semibold">${s.name}</h3>
+              <span class="pill" style="background-color: ${s.color || '#ccc'}22; border-color: ${s.color || '#ccc'};">Peso ${s.weight || 1}</span>
+            </div>
+            <p class="text-xs text-slate-500">${s.edital_title || 'Sem edital'}</p>
+            <div class="mt-3 flex gap-2">
+              <button onclick="editSubject(${s.id})" class="text-blue-600 hover:underline text-xs">Editar</button>
+              <button onclick="viewTopics(${s.id})" class="text-green-600 hover:underline text-xs">Ver Tópicos</button>
+            </div>
+          `;
+          grid.appendChild(card);
+        }
+      }
+
+      window.editSubject = function(id){
+        alert('Editar matéria #' + id + ' (em desenvolvimento)');
+      };
+
+      window.viewTopics = function(subjectId){
+        document.getElementById('filter-subject').value = subjectId;
+        tabs[4].click(); // Go to topics tab
+      };
+
+      document.getElementById('btn-add-subject').addEventListener('click', () => {
+        alert('Adicionar nova matéria (em desenvolvimento)');
+      });
+
+      // ========== TOPICS ==========
+      async function loadTopics(){
+        const data = await safeFetch(API_BASE + "/api/topics");
+        const list = document.getElementById('topics-list');
+        list.innerHTML = "";
+        
+        const topics = data?.topics || [];
+        if(topics.length === 0){
+          list.innerHTML = '<p class="text-center text-slate-500">Nenhum tópico cadastrado</p>';
+          return;
+        }
+
+        for(const t of topics){
+          const div = document.createElement('div');
+          div.className = "card";
+          div.innerHTML = `
+            <div class="flex items-center justify-between">
+              <div>
+                <h4 class="font-medium">${t.name}</h4>
+                <p class="text-xs text-slate-500">${t.subject_name || 'Sem matéria'} • ${t.estimated_concepts || 0} conceitos</p>
+              </div>
+              <div class="flex gap-2">
+                <button onclick="editTopic(${t.id})" class="text-blue-600 hover:underline text-xs">Editar</button>
+                <button onclick="viewSubtopics(${t.id})" class="text-green-600 hover:underline text-xs">Ver Subtópicos</button>
+              </div>
+            </div>
+          `;
+          list.appendChild(div);
+        }
+      }
+
+      window.editTopic = function(id){
+        alert('Editar tópico #' + id + ' (em desenvolvimento)');
+      };
+
+      window.viewSubtopics = function(topicId){
+        document.getElementById('filter-topic').value = topicId;
+        tabs[5].click(); // Go to subtopics tab
+      };
+
+      document.getElementById('btn-add-topic').addEventListener('click', () => {
+        alert('Adicionar novo tópico (em desenvolvimento)');
+      });
+
+      // ========== SUBTOPICS ==========
+      async function loadSubtopics(){
+        const data = await safeFetch(API_BASE + "/api/subtopics");
+        const list = document.getElementById('subtopics-list');
+        list.innerHTML = "";
+        
+        const subtopics = data?.subtopics || [];
+        if(subtopics.length === 0){
+          list.innerHTML = '<p class="text-center text-slate-500">Nenhum subtópico cadastrado</p>';
+          return;
+        }
+
+        for(const st of subtopics){
+          const div = document.createElement('div');
+          div.className = "card";
+          div.innerHTML = `
+            <div class="flex items-center justify-between">
+              <div>
+                <h4 class="font-medium">${st.name}</h4>
+                <p class="text-xs text-slate-500">${st.topic_name || 'Sem tópico'} • ${st.estimated_concepts || 0} conceitos</p>
+              </div>
+              <button onclick="editSubtopic(${st.id})" class="text-blue-600 hover:underline text-xs">Editar</button>
+            </div>
+          `;
+          list.appendChild(div);
+        }
+      }
+
+      window.editSubtopic = function(id){
+        alert('Editar subtópico #' + id + ' (em desenvolvimento)');
+      };
+
+      document.getElementById('btn-add-subtopic').addEventListener('click', () => {
+        alert('Adicionar novo subtópico (em desenvolvimento)');
+      });
+
+      // ========== STATS ==========
+      async function loadStats(){
+        const stats = await safeFetch(API_BASE + "/api/stats");
+        if(!stats) return;
+        
+        document.getElementById('stat-categories').textContent = stats.categories || 0;
+        document.getElementById('stat-contests').textContent = stats.contests || 0;
+        document.getElementById('stat-editals').textContent = stats.editals || 0;
+        document.getElementById('stat-subjects').textContent = stats.subjects || 0;
+      }
+
+      // ========== COSTS ==========
+      async function loadCosts(){
+        const metrics = await safeFetch(API_BASE + "/api/costs/metrics");
+        if(!metrics) return;
+        
+        // Cards de resumo
+        document.getElementById('cost-total').textContent = `R$ ${metrics.monthly.total.toFixed(2)}`;
+        document.getElementById('cost-openai').textContent = `R$ ${metrics.openai.estimatedCost.toFixed(2)}`;
+        document.getElementById('cost-openai-tokens').textContent = `${metrics.openai.tokensUsed.toLocaleString()} tokens`;
+        document.getElementById('cost-railway').textContent = `R$ ${metrics.railway.currentUsage.toFixed(2)}`;
+        document.getElementById('cost-railway-plan').textContent = `Plano: ${metrics.railway.plan}`;
+        document.getElementById('cost-storage').textContent = `${metrics.storage.database.toFixed(1)} MB`;
+        document.getElementById('cost-storage-limit').textContent = `Limite: ${metrics.storage.limit} MB`;
+        
+        // Breakdown de custos
+        const breakdownDiv = document.getElementById('cost-breakdown');
+        breakdownDiv.innerHTML = '';
+        metrics.monthly.breakdown.forEach(item => {
+          const bar = document.createElement('div');
+          bar.innerHTML = `
+            <div class="flex justify-between text-sm mb-1">
+              <span>${item.category}</span>
+              <span class="font-medium">R$ ${item.amount.toFixed(2)} (${item.percentage}%)</span>
+            </div>
+            <div class="w-full bg-slate-200 rounded-full h-2">
+              <div class="bg-blue-600 h-2 rounded-full" style="width: ${item.percentage}%"></div>
+            </div>
+          `;
+          breakdownDiv.appendChild(bar);
+        });
+        
+        // Barras de uso
+        const railwayPercent = (metrics.railway.currentUsage / metrics.railway.monthlyLimit) * 100;
+        document.getElementById('railway-usage-percent').textContent = `${Math.round(railwayPercent)}%`;
+        document.getElementById('railway-usage-bar').style.width = `${railwayPercent}%`;
+        document.getElementById('railway-usage-current').textContent = `R$ ${metrics.railway.currentUsage.toFixed(2)}`;
+        document.getElementById('railway-usage-limit').textContent = `R$ ${metrics.railway.monthlyLimit.toFixed(2)}`;
+        
+        const storagePercent = (metrics.storage.database / metrics.storage.limit) * 100;
+        document.getElementById('storage-usage-percent').textContent = `${Math.round(storagePercent)}%`;
+        document.getElementById('storage-usage-bar').style.width = `${storagePercent}%`;
+        document.getElementById('storage-usage-current').textContent = `${metrics.storage.database.toFixed(1)} MB`;
+        document.getElementById('storage-usage-limit').textContent = `${metrics.storage.limit} MB`;
+        
+        // Histórico
+        const history = await safeFetch(API_BASE + "/api/costs/history");
+        if(history && history.length > 0){
+          const historyDiv = document.getElementById('cost-history');
+          historyDiv.innerHTML = `
+            <table class="w-full text-xs">
+              <thead class="text-left text-slate-500 border-b">
+                <tr>
+                  <th class="py-2">Data</th>
+                  <th class="py-2">Itens</th>
+                  <th class="py-2">Tokens</th>
+                  <th class="py-2">Custo</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${history.map(h => `
+                  <tr class="border-b">
+                    <td class="py-2">${new Date(h.date).toLocaleDateString('pt-BR')}</td>
+                    <td class="py-2">${h.items}</td>
+                    <td class="py-2 mono">${h.tokens.toLocaleString()}</td>
+                    <td class="py-2 mono">R$ ${h.cost.toFixed(2)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+        }
+      }
+
+      // ========== HARVESTER ==========
+      document.getElementById('btn-run-harvest').addEventListener('click', async () => {
+        if(!confirm('Executar coleta automática de provas?')) return;
+        alert('Coleta iniciada (em desenvolvimento)');
+      });
+
+      document.getElementById('btn-view-harvest-items').addEventListener('click', () => {
+        alert('Ver itens coletados (em desenvolvimento)');
+      });
+    </script>
+  </body>
+</html>
