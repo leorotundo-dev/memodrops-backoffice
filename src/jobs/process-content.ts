@@ -140,7 +140,7 @@ export async function processHarvestItems() {
     // Buscar itens que ainda não foram processados
     const result = await query(`
       SELECT * FROM harvest_items
-      WHERE status = 'stored'
+      WHERE status = 'fetched'
       AND content_text IS NOT NULL
       AND LENGTH(content_text) > 100
       AND processed_at IS NULL
