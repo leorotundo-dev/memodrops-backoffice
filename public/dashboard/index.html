@@ -455,7 +455,7 @@
       // ========================================
       function showUtilityTab(tab) {
         document.getElementById('main-content').classList.add('hidden');
-        document.getElementById('breadcrumb').classList.add('hidden');
+        // Manter breadcrumb visível para acesso ao Início
         document.getElementById('utility-panel').classList.remove('hidden');
         
         const title = document.getElementById('utility-title');
@@ -475,7 +475,7 @@
 
       function hideUtilityPanel() {
         document.getElementById('main-content').classList.remove('hidden');
-        document.getElementById('breadcrumb').classList.remove('hidden');
+        // Breadcrumb já está visível
         document.getElementById('utility-panel').classList.add('hidden');
       }
 
