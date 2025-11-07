@@ -242,6 +242,42 @@ router.get('/api/contest/:id/editals', async (req, res) => {
 });
 
 /**
+ * GET /api/editals/:id
+ * Busca edital por ID
+ */
+router.get('/api/editals/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await query(
+      `SELECT e.*, c.title as contest_title 
+       FROM editals e
+       LEFT JOIN contests c ON e.contest_id = c.id
+       WHERE e.id = $1`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'Edital não encontrado' 
+      });
+    }
+
+    res.json({
+      success: true,
+      edital: result.rows[0]
+    });
+  } catch (error) {
+    console.error('[API] Error fetching edital:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao buscar edital' 
+    });
+  }
+});
+
+/**
  * GET /uploads/:filename
  * Serve arquivos de upload
  */

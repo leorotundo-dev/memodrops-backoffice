@@ -463,12 +463,71 @@
         }
       }
 
-      window.viewEdital = function(id){
-        alert('Ver edital #' + id + ' (em desenvolvimento)');
+      window.viewEdital = async function(id){
+        try {
+          const response = await fetch(API_BASE + `/api/editals/${id}`);
+          const data = await response.json();
+          
+          if (!data.success) {
+            alert('❌ Erro ao carregar edital');
+            return;
+          }
+          
+          const edital = data.edital;
+          
+          if (!edital.file_url) {
+            alert('⚠️ Este edital ainda não tem arquivo PDF anexado.\n\nClique em "Upload de Edital" para adicionar.');
+            return;
+          }
+          
+          // Abrir PDF em nova aba
+          window.open(edital.file_url, '_blank');
+        } catch (error) {
+          alert('❌ Erro: ' + error.message);
+        }
       };
 
       document.getElementById('btn-upload-edital').addEventListener('click', () => {
-        alert('Upload de edital (em desenvolvimento)');
+        // Criar input file dinâmico
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'application/pdf';
+        input.onchange = async (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          
+          if (file.type !== 'application/pdf') {
+            alert('❌ Apenas arquivos PDF são permitidos');
+            return;
+          }
+          
+          if (file.size > 10 * 1024 * 1024) {
+            alert('❌ Arquivo muito grande. Máximo: 10MB');
+            return;
+          }
+          
+          const formData = new FormData();
+          formData.append('file', file);
+          
+          try {
+            const response = await fetch(API_BASE + '/api/edital/upload', {
+              method: 'POST',
+              body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+              alert('✅ Upload realizado com sucesso!\n\nURL: ' + result.url);
+              loadEditals(); // Recarregar lista
+            } else {
+              alert('❌ Erro: ' + result.error);
+            }
+          } catch (error) {
+            alert('❌ Erro ao fazer upload: ' + error.message);
+          }
+        };
+        input.click();
       });
 
       // ========== SUBJECTS ==========
