@@ -23,6 +23,7 @@ import testV2Router from './routes/test-v2.js';
 import processV3Router from './routes/process-v3.js';
 import personalizationRouter from './routes/personalization.js';
 import qaRouter from './routes/qa.js';
+import pedagogyRouter from './routes/pedagogy.js';
 // Criar diretório para uploads se não existir
 // Usar /data/uploads para persistência via Railway Volume
 const uploadsDir = process.env.UPLOAD_DIR || '/data/uploads';
@@ -95,6 +96,8 @@ app.use(processV2Router);
 app.use(personalizationRouter);
 // QA and Metrics endpoints
 app.use(qaRouter);
+// Pedagogy endpoints
+app.use(pedagogyRouter);
 // Test V2 endpoints
 app.use(testV2Router);
 // Process V3 endpoints (com microserviços)
