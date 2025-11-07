@@ -213,7 +213,8 @@
 
         try {
           const res = await fetch('/api/categories');
-          const categories = await res.json();
+          const data = await res.json();
+          const categories = data.categories || data;
 
           let html = '<div class="card">';
           html += '<div class="flex items-center justify-between mb-6">';
@@ -246,7 +247,8 @@
 
         try {
           const res = await fetch(`/api/contests?category_id=${state.categoryId}`);
-          const contests = await res.json();
+          const data = await res.json();
+          const contests = data.contests || data;
 
           let html = '<div class="card">';
           html += '<div class="flex items-center justify-between mb-6">';
@@ -289,7 +291,8 @@
 
         try {
           const res = await fetch(`/api/editals?contest_id=${state.contestId}`);
-          const editals = await res.json();
+          const data = await res.json();
+          const editals = data.editals || data;
 
           let html = '<div class="card">';
           html += '<div class="flex items-center justify-between mb-6">';
@@ -337,7 +340,8 @@
 
         try {
           const res = await fetch(`/api/subjects?edital_id=${state.editalId}`);
-          const subjects = await res.json();
+          const data = await res.json();
+          const subjects = data.subjects || data;
 
           let html = '<div class="card">';
           html += '<div class="flex items-center justify-between mb-6">';
@@ -373,7 +377,8 @@
 
         try {
           const res = await fetch(`/api/topics?subject_id=${state.subjectId}`);
-          const topics = await res.json();
+          const data = await res.json();
+          const topics = data.topics || data;
 
           let html = '<div class="card">';
           html += '<div class="flex items-center justify-between mb-6">';
@@ -413,7 +418,8 @@
 
         try {
           const res = await fetch(`/api/subtopics?topic_id=${state.topicId}`);
-          const subtopics = await res.json();
+          const data = await res.json();
+          const subtopics = data.subtopics || data;
 
           let html = '<div class="card">';
           html += '<div class="flex items-center justify-between mb-6">';
