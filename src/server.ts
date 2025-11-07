@@ -19,6 +19,7 @@ import institutionsRouter from './routes/institutions.js';
 import migrateRouter from './routes/migrate.js';
 import cleanupRouter from './routes/cleanup.js';
 import pdfRouter from './routes/pdf.js';
+import processRouter from './routes/process.js';
 
 // Criar diretório para uploads se não existir
 // Usar /data/uploads para persistência via Railway Volume
@@ -103,6 +104,9 @@ app.use(cleanupRouter);
 
 // PDF endpoints
 app.use(pdfRouter);
+
+// Process endpoints
+app.use(processRouter);
 
 // Institutions endpoints
 console.log('[DEBUG] Registering institutions router...');

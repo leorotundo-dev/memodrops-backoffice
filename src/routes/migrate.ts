@@ -5,6 +5,11 @@ const router = express.Router();
 
 // SQL da migration inline
 const INSTITUTIONS_MIGRATION_SQL = `
+-- Habilitar extensão pg_trgm para busca por similaridade
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE INDEX IF NOT EXISTS contests_title_trgm_idx ON contests USING gin (title gin_trgm_ops);
+ALTER TABLE harvest_items ADD COLUMN IF NOT EXISTS error TEXT;
+
 -- Criar função para atualizar updated_at (se não existir)
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$

@@ -1,6 +1,8 @@
--- Requires: CREATE EXTENSION IF NOT EXISTS pgcrypto;
-create table if not exists harvest_items(
-  id uuid primary key default gen_random_uuid(),
+-- Requires: CREATE EXTENSION IF NOT EXISTS-- schema.sql
+-- Habilitar extensão para similaridade de texto
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+create table if not exists harvest_items(id uuid primary key default gen_random_uuid(),
   source text not null,                   -- e.g., 'fgv', 'ceb', 'planalto', 'dou'
   url text not null,
   pdf_url varchar(1000),
