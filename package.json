@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "type": "module",
   "scripts": {
-    "build": "tsc -p tsconfig.json && mkdir -p dist/db && cp src/db/schema.sql dist/db/ && mkdir -p dist/migrations && cp migrations/*.sql dist/migrations/ 2>/dev/null || true && cp -r public dist/",
+    "build": "tsc -p tsconfig.json && mkdir -p dist/db && cp src/db/schema.sql dist/db/ && mkdir -p dist/db/migrations && cp src/db/migrations/*.sql dist/db/migrations/ 2>/dev/null || true && cp -r public dist/",
     "start": "node dist/server.js",
     "dev": "tsx src/server.ts"
   },
