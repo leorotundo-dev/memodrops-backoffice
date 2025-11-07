@@ -17,6 +17,7 @@ import adminRouter from './routes/admin.js';
 import costsRouter from './routes/costs.js';
 import institutionsRouter from './routes/institutions.js';
 import migrateRouter from './routes/migrate.js';
+import cleanupRouter from './routes/cleanup.js';
 
 // Criar diretório para uploads se não existir
 // Usar /data/uploads para persistência via Railway Volume
@@ -95,6 +96,9 @@ console.log('[DEBUG] Registering admin router...');
 app.use('/api/admin', adminRouter);
 app.use('/api/costs', costsRouter);
 console.log('[DEBUG] Admin router registered');
+
+// Cleanup endpoints
+app.use(cleanupRouter);
 
 // Institutions endpoints
 console.log('[DEBUG] Registering institutions router...');
