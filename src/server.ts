@@ -26,6 +26,7 @@ import processV2Router from './routes/process-v2.js';
 import testV2Router from './routes/test-v2.js';
 import processV3Router from './routes/process-v3.js';
 import personalizationRouter from './routes/personalization.js';
+import qaRouter from './routes/qa.js';
 
 // Criar diretório para uploads se não existir
 // Usar /data/uploads para persistência via Railway Volume
@@ -120,6 +121,9 @@ app.use(processV2Router);
 
 // Personalization endpoints
 app.use(personalizationRouter);
+
+// QA and Metrics endpoints
+app.use(qaRouter);
 
 // Test V2 endpoints
 app.use(testV2Router);
