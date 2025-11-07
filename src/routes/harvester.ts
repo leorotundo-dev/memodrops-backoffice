@@ -1,6 +1,7 @@
 // src/routes/harvester.ts
 import { Router } from 'express';
 import { query } from '../db/index.js';
+import { normalizeSalary, normalizeDate, isValidContestTitle } from '../utils/dataFormatter.js';
 
 const router = Router();
 
@@ -35,6 +36,12 @@ router.post('/api/harvester/ingest', async (req, res) => {
     const { sourceItem, structure }: IngestRequest = req.body;
 
     console.log(`[Harvester] Recebendo ingestão: ${structure.contestName}`);
+
+    // Validar se é um título de concurso válido
+    if (!isValidContestTitle(structure.contestName)) {
+      console.log(`[Harvester] ⚠️  Título inválido (conteúdo irrelevante): ${structure.contestName}`);
+      return res.json({ success: false, message: 'Título inválido' });
+    }
 
     // 1. Criar ou buscar categoria
     const categorySlug = structure.category.toLowerCase().replace(/\s+/g, '-');
@@ -92,9 +99,9 @@ router.post('/api/harvester/ingest', async (req, res) => {
         structure.contestName,
         contestSlug,
         structure.institution || sourceItem.source,
-        structure.examDate || null,
+        normalizeDate(structure.examDate) || null,
         structure.positions || null,
-        structure.salary || null,
+        normalizeSalary(structure.salary) || null,
         sourceItem.url
       ]
     );
