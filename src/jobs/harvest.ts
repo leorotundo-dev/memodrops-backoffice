@@ -3,12 +3,10 @@ import { harvestFGV } from '../adapters/fgv.js';
 import { harvestCebraspe } from '../adapters/ceb.js';
 import { harvestDOU } from '../adapters/dou.js';
 import { harvestPlanalto } from '../adapters/planalto.js';
-import { harvestCamara } from '../adapters/camara.js';
 import { harvestLexML } from '../adapters/lexml.js';
 import { harvestFCC } from '../adapters/fcc.js';
 import { harvestVunesp } from '../adapters/vunesp.js';
 import { harvestQuadrix } from '../adapters/quadrix.js';
-import { harvestPCI } from '../adapters/pci.js';
 import { harvestCesgranrio } from '../adapters/cesgranrio.js';
 import { harvestIBADE } from '../adapters/ibade.js';
 import { harvestAOCP } from '../adapters/aocp.js';
@@ -46,14 +44,12 @@ export async function runAll(): Promise<HarvestResult> {
   const sources = [
     { name: 'DOU', fn: harvestDOU },
     { name: 'Planalto', fn: harvestPlanalto },
-    { name: 'Câmara', fn: harvestCamara },
     { name: 'LexML', fn: harvestLexML },
     { name: 'FGV', fn: harvestFGV },
     { name: 'CESPE', fn: harvestCebraspe },
     { name: 'FCC', fn: harvestFCC },
     { name: 'Vunesp', fn: harvestVunesp },
     { name: 'Quadrix', fn: harvestQuadrix },
-    { name: 'PCI', fn: harvestPCI },
     { name: 'Cesgranrio', fn: harvestCesgranrio },
     { name: 'IBADE', fn: harvestIBADE },
     { name: 'AOCP', fn: harvestAOCP },

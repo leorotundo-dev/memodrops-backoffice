@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import { fetchHTML } from './fetch.js';
+import { fetchHTML } from '../fetch';
 
 export interface HarvestItem {
   url: string;
