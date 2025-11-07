@@ -22,6 +22,7 @@ import { isDuplicate } from '../pipeline/dedupe.js';
 import { detectPII } from '../compliance/pii-detector.js';
 import { extractDocument, isDocumentURL } from '../utils/documentExtractor.js';
 import { downloadPDF, isPDFUrl, extractEditalName } from '../utils/pdfDownloader.js';
+import { analyzeEdital } from '../utils/editalAnalyzer.js';
 export async function runAll() {
     console.log('🚀 Iniciando coleta do Harvester');
     const result = {
@@ -80,6 +81,13 @@ export async function runAll() {
                         if (extraction.text && extraction.text.length > 100) {
                             content = extraction.text;
                             console.log(`[Harvest] ✅ Texto extraído (${extraction.format.toUpperCase()}): ${extraction.text.length} caracteres`);
+                            // Analisar conteúdo do edital
+                            const analysis = analyzeEdital(content);
+                            if (Object.keys(analysis).length > 0) {
+                                console.log(`[Harvest] 🔍 Análise automática:`, analysis);
+                                // Mesclar análise com meta
+                                item.meta = { ...item.meta, ...analysis };
+                            }
                         }
                         else {
                             console.log(`[Harvest] ⚠️  Não foi possível extrair texto do documento, usando título`);

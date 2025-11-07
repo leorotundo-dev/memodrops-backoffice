@@ -402,7 +402,8 @@
                   </div>
                 </div>
                 <div class="flex items-center gap-2">
-                  ${edital.file_url ? '<button onclick="event.stopPropagation(); window.open(\'/uploads/\' + \'' + edital.file_url + '\', \'_blank\')" class="btn-secondary btn-sm">📎 PDF</button>' : ''}
+                  ${edital.pdf_path ? '<button onclick="event.stopPropagation(); viewPDF(' + edital.id + ')" class="btn-secondary btn-sm">👁️ Ver PDF</button>' : ''}
+                  ${edital.pdf_path ? '<button onclick="event.stopPropagation(); downloadPDF(' + edital.id + ')" class="btn-secondary btn-sm">💾 Download</button>' : ''}
                   <button onclick="event.stopPropagation(); uploadEdital(${edital.id})" class="btn-secondary btn-sm">📤 Upload</button>
                 </div>
               </div>
@@ -833,6 +834,14 @@
       function addTopic() { alert('Adicionar tópico (em desenvolvimento)'); }
       function addSubtopic() { alert('Adicionar subtópico (em desenvolvimento)'); }
       function uploadEdital(id) { alert('Upload de edital ' + id + ' (em desenvolvimento)'); }
+      
+      function viewPDF(editalId) {
+        window.open(`/api/pdf/edital/${editalId}`, '_blank');
+      }
+      
+      function downloadPDF(editalId) {
+        window.location.href = `/api/pdf/download/${editalId}`;
+      }
 
       // ========================================
       // INICIALIZAÇÃO
