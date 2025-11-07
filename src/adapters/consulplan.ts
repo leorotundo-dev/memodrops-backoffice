@@ -1,0 +1,48 @@
+
+import * as cheerio from 'cheerio';
+import { fetchHTML } from '../fetch';
+
+export interface HarvestItem {
+  url: string;
+  title: string;
+  content: string;
+  meta: Record<string, any>;
+}
+
+/**
+ * Adaptador Consulplan
+ * Site: https://www.consulplan.net/concursos.aspx
+ * Tipo: banca
+ */
+export async function harvestConsulplan(): Promise<HarvestItem[]> {
+  console.log('[Consulplan] Iniciando coleta...');
+  const items: HarvestItem[] = [];
+  const base = 'https://www.consulplan.net';
+  const url = `${base}/concursos.aspx`;
+
+  try {
+    const html = await fetchHTML(url);
+    const $ = cheerio.load(html);
+
+    $('table tr, .concurso, article').each((_, el) => {
+      const a = $(el).find('a[href]').first();
+      const link = a.attr('href') || '';
+      const title = a.text().trim() || $(el).find('h3, h2').text().trim();
+      if (!link || !title) return;
+      const fullUrl = link.startsWith('http') ? link : `${base}${link}`;
+
+      const text = $(el).text().replace(/\s+/g, ' ').trim();
+      if (/apostila|curso|preparatório/i.test(text)) return;
+      const vagas = text.match(/(\d+)\s*vaga/i)?.[1];
+      const salario = text.match(/R\$\s*[\d.,]+/i)?.[0];
+
+      if (!items.find(i => i.url === fullUrl)) {
+        items.push({ url: fullUrl, title, content: text.slice(0, 500), meta: { fonte: 'Consulplan', vagas, salario } });
+      }
+    });
+  } catch (e:any) {
+    console.error('[Consulplan] Erro:', e.message);
+  }
+  console.log(`[Consulplan] Coletados ${items.length} itens`);
+  return items;
+}
