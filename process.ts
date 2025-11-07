@@ -48,7 +48,10 @@ export async function runProcessingOnce() {
     await Promise.all(batch.map(async (item) => {
       try {
         await query('UPDATE harvest_items SET status = $2 WHERE id = $1', [item.id, 'processing']);
+        console.log(`[process] Item ${item.id}: Iniciando extração de estrutura...`);
         const payload = await extractStructure(item.content_text!);
+        console.log(`[process] Item ${item.id}: Estrutura extraída. Payload: ${JSON.stringify(payload).substring(0, 200)}...`);
+        console.log(`[process] Item ${item.id}: Enviando para ingestão em ${BASE_URL}/api/harvester/ingest...`);
         const res = await fetch(`${BASE_URL}/api/harvester/ingest`, {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
@@ -59,13 +62,16 @@ export async function runProcessingOnce() {
           })
         });
         if (!res.ok) {
+          console.error(`[process] Item ${item.id}: Ingestão falhou com status ${res.status}.`);
           const body = await res.text();
           throw new Error(`Ingest falhou: ${res.status} - ${body}`);
         }
         await query('UPDATE harvest_items SET status = $2 WHERE id = $1', [item.id, 'stored']);
+        console.log(`[process] Item ${item.id}: Ingestão concluída com sucesso.`);
         console.log(`[process] OK item ${item.id}`);
       } catch (err: any) {
-        console.error(`[process] ERRO item ${item.id}:`, err?.message || err);
+        console.error(`[process] Item ${item.id}: Erro durante o processamento.`);
+        console.error(`[process] ERRO item ${item.id}:`, err?.message || err, '\nStack:', err?.stack);
         try { await query('UPDATE harvest_items SET status = $2 WHERE id = $1', [item.id, 'error']); } catch {}
         fail++;
       }
