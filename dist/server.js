@@ -25,6 +25,7 @@ import personalizationRouter from './routes/personalization.js';
 import qaRouter from './routes/qa.js';
 import pedagogyRouter from './routes/pedagogy.js';
 import ragRouter from './routes/rag.js';
+import adminMigrationsRouter from './routes/admin-migrations.js';
 // Criar diretório para uploads se não existir
 // Usar /data/uploads para persistência via Railway Volume
 const uploadsDir = process.env.UPLOAD_DIR || '/data/uploads';
@@ -101,6 +102,8 @@ app.use(qaRouter);
 app.use(pedagogyRouter);
 // RAG endpoints
 app.use(ragRouter);
+// Admin migrations endpoints
+app.use(adminMigrationsRouter);
 // Test V2 endpoints
 app.use(testV2Router);
 // Process V3 endpoints (com microserviços)
