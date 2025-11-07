@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc -p tsconfig.json && cp -r public dist/",
+    "build": "tsc -p tsconfig.json && cp -r public dist/ && mkdir -p dist/db && cp src/db/*.sql dist/db/ && mkdir -p dist/migrations && cp migrations/*.sql dist/migrations/ 2>/dev/null || true",
     "check": "tsc --noEmit",
     "start": "node dist/server.js",
     "run:once": "node dist/jobs/harvest.js",
