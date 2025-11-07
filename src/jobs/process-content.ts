@@ -40,29 +40,18 @@ async function extractStructure(item: HarvestItem): Promise<StructuredContent | 
       return null;
     }
 
-    const prompt = `Analise o seguinte edital/documento e extraia a estrutura de concurso:
+    // Otimização: reduzir tamanho do conteúdo baseado no tamanho real
+    const maxContentLength = item.content_text.length < 500 ? item.content_text.length : 3000;
+    const content = item.content_text.substring(0, maxContentLength);
 
-TÍTULO: ${item.title}
-FONTE: ${item.source}
-CONTEÚDO: ${item.content_text.substring(0, 8000)}
+    // Prompt compacto para economizar tokens
+    const prompt = `Extraia estrutura JSON do concurso:
+Título: ${item.title}
+Fonte: ${item.source}
+Conteúdo: ${content}
 
-Retorne JSON com:
-{
-  "contestName": "Nome do concurso",
-  "category": "legislativo|judiciario|executivo|seguranca|fiscal|educacao|saude|outro",
-  "subjects": [
-    {
-      "name": "Nome da matéria",
-      "topics": ["Tópico 1", "Tópico 2"]
-    }
-  ],
-  "examDate": "YYYY-MM-DD ou null",
-  "institution": "Instituição organizadora",
-  "positions": número de vagas ou null,
-  "salary": "R$ X.XXX,XX ou null"
-}
-
-Se não for um edital de concurso, retorne null.`;
+Retorne: {contestName, category(legislativo|judiciario|executivo|seguranca|fiscal|educacao|saude|outro), subjects[{name, topics[]}], examDate?, institution?, positions?, salary?}
+Se não for concurso: null`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -71,7 +60,7 @@ Se não for um edital de concurso, retorne null.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-nano', // Otimização: modelo mais barato (~80% economia)
         messages: [
           { role: 'system', content: 'Você é um especialista em análise de editais de concursos públicos brasileiros.' },
           { role: 'user', content: prompt }
