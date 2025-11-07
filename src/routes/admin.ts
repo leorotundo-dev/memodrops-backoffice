@@ -142,4 +142,74 @@ router.get('/stats', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/admin/create-editals
+ * Cria editais para concursos existentes que não têm edital
+ */
+router.post('/create-editals', async (req, res) => {
+  try {
+    console.log('[Admin] Criando editais retroativos...');
+    
+    // 1. Criar editais
+    const result1 = await query(`
+      INSERT INTO editals (contest_id, title, slug, number, status, created_at)
+      SELECT 
+        c.id,
+        'Edital - ' || c.title as title,
+        'edital-' || c.slug as slug,
+        '001/' || EXTRACT(YEAR FROM c.created_at) as number,
+        'open' as status,
+        c.created_at
+      FROM contests c
+      WHERE NOT EXISTS (
+        SELECT 1 FROM editals e WHERE e.contest_id = c.id
+      )
+      ON CONFLICT (contest_id, slug) DO NOTHING
+      RETURNING id
+    `);
+    
+    const editalsCreated = result1.rowCount;
+    console.log(`[Admin] ${editalsCreated} editais criados`);
+    
+    // 2. Associar matérias aos editais
+    const result2 = await query(`
+      INSERT INTO edital_subjects (edital_id, subject_id, created_at)
+      SELECT 
+        e.id as edital_id,
+        s.id as subject_id,
+        NOW() as created_at
+      FROM subjects s
+      INNER JOIN editals e ON s.contest_id = e.contest_id
+      WHERE NOT EXISTS (
+        SELECT 1 FROM edital_subjects es 
+        WHERE es.edital_id = e.id AND es.subject_id = s.id
+      )
+      ON CONFLICT (edital_id, subject_id) DO NOTHING
+      RETURNING id
+    `);
+    
+    const associationsCreated = result2.rowCount;
+    console.log(`[Admin] ${associationsCreated} associações criadas`);
+    
+    // 3. Contar total
+    const result3 = await query('SELECT COUNT(*) as count FROM editals');
+    const totalEditals = parseInt(result3.rows[0].count);
+    
+    res.json({
+      success: true,
+      editalsCreated,
+      associationsCreated,
+      totalEditals,
+      message: `${editalsCreated} editais criados com ${associationsCreated} matérias associadas`
+    });
+    
+  } catch (error: any) {
+    console.error('[Admin] Erro ao criar editais:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 export default router;
