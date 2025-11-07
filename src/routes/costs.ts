@@ -65,12 +65,28 @@ router.get('/metrics', async (req, res) => {
     const dbSizeMB = parseInt(dbSizeResult.rows[0]?.size || '0') / (1024 * 1024);
     
     // Calcular uso do volume de uploads
-    const { execSync } = require('child_process');
+    const fs = require('fs');
+    const path = require('path');
     let uploadsSizeMB = 0;
+    
     try {
-      const output = execSync('du -sm /data/uploads 2>/dev/null || echo "0"').toString();
-      uploadsSizeMB = parseFloat(output.split('\t')[0]) || 0;
+      const uploadsDir = '/data/uploads';
+      if (fs.existsSync(uploadsDir)) {
+        const files = fs.readdirSync(uploadsDir);
+        let totalBytes = 0;
+        
+        for (const file of files) {
+          const filePath = path.join(uploadsDir, file);
+          const stats = fs.statSync(filePath);
+          if (stats.isFile()) {
+            totalBytes += stats.size;
+          }
+        }
+        
+        uploadsSizeMB = totalBytes / (1024 * 1024);
+      }
     } catch (e) {
+      console.error('[Costs] Erro ao calcular tamanho do volume:', e);
       uploadsSizeMB = 0;
     }
     
