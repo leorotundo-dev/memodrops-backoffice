@@ -373,16 +373,18 @@ app.listen(PORT, async () => {
   // Auto-setup database on first run
   await autoSetupDatabase();
   
-  // Schedule daily harvest at 2 AM (low traffic time)
-  cron.schedule('0 2 * * *', async () => {
-    console.log('🕐 [CRON] Executando coleta agendada...');
+  // Inicializar scheduler interno
+  console.log('\n📅 Inicializando scheduler...');
+  await import('./scheduler.js');
+  
+  // Executar coleta inicial após 10 segundos
+  setTimeout(async () => {
+    console.log('\n🎬 Executando coleta inicial...');
     try {
       const result = await runAll();
-      console.log('✅ [CRON] Coleta concluída:', result);
+      console.log('✅ Coleta inicial concluída:', result);
     } catch (error) {
-      console.error('❌ [CRON] Erro na coleta:', error);
+      console.error('❌ Erro na coleta inicial:', error);
     }
-  });
-  
-  console.log('⏰ Cron job configurado: coleta diária às 2h da manhã');
+  }, 10000);
 });
