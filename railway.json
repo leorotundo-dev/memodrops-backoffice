@@ -4,6 +4,10 @@
     "builder": "NIXPACKS",
     "buildCommand": "pnpm install && pnpm build"
   },
+  "cron": {
+    "schedule": "0 */6 * * *",
+    "command": "node dist/jobs/harvest.js"
+  },
   "deploy": {
     "startCommand": "node dist/server.js",
     "healthcheckPath": "/health",
