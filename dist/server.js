@@ -10,11 +10,17 @@ import { setupRouter } from './setup-endpoint.js';
 import { autoSetupDatabase } from './db/auto-setup.js';
 import hierarchyRouter from './routes/hierarchy.js';
 import editalRouter from './routes/edital.js';
+import harvesterRouter from './routes/harvester.js';
+import dropsRouter from './routes/drops.js';
 // Criar diretório para uploads se não existir
-const uploadsDir = '/tmp/editals';
+// Usar /data/uploads para persistência via Railway Volume
+const uploadsDir = process.env.UPLOAD_DIR || '/data/uploads';
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
     console.log(`✅ Created uploads directory: ${uploadsDir}`);
+}
+else {
+    console.log(`✅ Uploads directory already exists: ${uploadsDir}`);
 }
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -34,6 +40,14 @@ app.use(hierarchyRouter);
 console.log('[DEBUG] Registering edital router...');
 app.use(editalRouter);
 console.log('[DEBUG] Edital router registered');
+// Harvester endpoints
+console.log('[DEBUG] Registering harvester router...');
+app.use(harvesterRouter);
+console.log('[DEBUG] Harvester router registered');
+// Drops endpoints
+console.log('[DEBUG] Registering drops router...');
+app.use(dropsRouter);
+console.log('[DEBUG] Drops router registered');
 // Drop tables endpoint (DANGER - development only)
 app.post('/admin/drop-tables', async (req, res) => {
     try {

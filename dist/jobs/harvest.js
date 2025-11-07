@@ -12,6 +12,7 @@ import { harvestPCI } from '../adapters/pci.js';
 import { query } from '../db/index.js';
 import { isDuplicate } from '../pipeline/dedupe.js';
 import { detectPII } from '../compliance/pii-detector.js';
+import { isPdfUrl, processPdf } from '../pipeline/pdfProcessor.js';
 export async function runAll() {
     console.log('🚀 Iniciando coleta do Harvester');
     const result = {
@@ -41,7 +42,24 @@ export async function runAll() {
             result.total += items.length;
             for (const item of items) {
                 try {
-                    const { dup, hash } = await isDuplicate(name, item.content || item.title);
+                    // Se for PDF, tentar extrair texto
+                    let content = item.content;
+                    let pdfUrl = null;
+                    if (isPdfUrl(item.url)) {
+                        console.log(`[Harvest] PDF detectado: ${item.url}`);
+                        pdfUrl = item.url;
+                        // Tentar extrair texto do PDF
+                        const extractedText = await processPdf(item.url);
+                        if (extractedText && extractedText.length > 100) {
+                            content = extractedText;
+                            console.log(`[Harvest] ✅ Texto extraído do PDF: ${extractedText.length} caracteres`);
+                        }
+                        else {
+                            console.log(`[Harvest] ⚠️  Não foi possível extrair texto do PDF, usando título`);
+                            content = item.content || item.title;
+                        }
+                    }
+                    const { dup, hash } = await isDuplicate(name, content || item.title);
                     if (dup) {
                         result.duplicates++;
                         continue;
@@ -56,13 +74,14 @@ export async function runAll() {
                         license = 'public_domain';
                     }
                     await query(`INSERT INTO harvest_items 
-             (source, url, title, content_text, hash, license, pii_flags, meta, status, fetched_at)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+             (source, url, pdf_url, title, content_text, hash, license, pii_flags, meta, status, fetched_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
              ON CONFLICT (source, url) DO NOTHING`, [
                         name,
                         item.url,
+                        pdfUrl,
                         item.title,
-                        item.content,
+                        content,
                         hash,
                         license,
                         JSON.stringify(piiFlags),
