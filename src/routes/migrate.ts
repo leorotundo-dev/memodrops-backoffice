@@ -10,6 +10,15 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE INDEX IF NOT EXISTS contests_title_trgm_idx ON contests USING gin (title gin_trgm_ops);
 ALTER TABLE harvest_items ADD COLUMN IF NOT EXISTS error TEXT;
 
+-- Adicionar colunas de datas nos concursos
+ALTER TABLE contests ADD COLUMN IF NOT EXISTS registration_start DATE;
+ALTER TABLE contests ADD COLUMN IF NOT EXISTS registration_end DATE;
+ALTER TABLE contests ADD COLUMN IF NOT EXISTS exam_date DATE;
+ALTER TABLE contests ADD COLUMN IF NOT EXISTS result_date DATE;
+
+-- Adicionar coluna structured_data nos editais
+ALTER TABLE editals ADD COLUMN IF NOT EXISTS structured_data JSONB;
+
 -- Criar função para atualizar updated_at (se não existir)
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
