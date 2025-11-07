@@ -45,4 +45,23 @@ router.post('/api/harvest/run', async (req, res) => {
   }
 });
 
+// Endpoint para resetar itens com erro para reprocessar
+router.post('/api/cleanup/reset-errors', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      UPDATE harvest_items
+      SET status = 'fetched', error = NULL, processed_at = NULL
+      WHERE status = 'error'
+    `);
+    
+    res.json({
+      success: true,
+      message: `${result.rowCount} itens resetados para reprocessamento`
+    });
+  } catch (error) {
+    console.error('Erro ao resetar erros:', error);
+    res.status(500).json({ error: 'Erro ao resetar erros' });
+  }
+});
+
 export default router;
