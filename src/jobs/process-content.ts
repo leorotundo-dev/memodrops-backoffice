@@ -12,7 +12,6 @@ interface HarvestItem {
   url: string;
   title: string;
   content_text: string;
-  content_type: string;
   license: string;
   fetched_at: string;
 }
@@ -142,7 +141,8 @@ export async function processHarvestItems() {
     const result = await query(`
       SELECT * FROM harvest_items
       WHERE status = 'stored'
-      AND content_type IN ('pdf', 'html', 'text')
+      AND content_text IS NOT NULL
+      AND LENGTH(content_text) > 100
       AND license IN ('public_domain', 'cc0', 'cc_by', 'cc_by_sa')
       AND processed_at IS NULL
       ORDER BY fetched_at DESC
