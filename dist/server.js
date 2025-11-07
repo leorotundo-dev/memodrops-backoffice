@@ -19,6 +19,7 @@ import migrateRouter from './routes/migrate.js';
 import cleanupRouter from './routes/cleanup.js';
 import pdfRouter from './routes/pdf.js';
 import processRouter from './routes/process.js';
+import errorsRouter from './routes/errors.js';
 // Criar diretório para uploads se não existir
 // Usar /data/uploads para persistência via Railway Volume
 const uploadsDir = process.env.UPLOAD_DIR || '/data/uploads';
@@ -89,6 +90,8 @@ app.use(cleanupRouter);
 app.use(pdfRouter);
 // Process endpoints
 app.use(processRouter);
+// Errors analysis endpoints
+app.use(errorsRouter);
 // Institutions endpoints
 console.log('[DEBUG] Registering institutions router...');
 app.use('/api/institutions', institutionsRouter);
