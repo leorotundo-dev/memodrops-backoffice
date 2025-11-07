@@ -16,6 +16,7 @@ import dropsRouter from './routes/drops.js';
 import adminRouter from './routes/admin.js';
 import costsRouter from './routes/costs.js';
 import institutionsRouter from './routes/institutions.js';
+import migrateRouter from './routes/migrate.js';
 
 // Criar diretório para uploads se não existir
 // Usar /data/uploads para persistência via Railway Volume
@@ -99,6 +100,11 @@ console.log('[DEBUG] Admin router registered');
 console.log('[DEBUG] Registering institutions router...');
 app.use('/api/institutions', institutionsRouter);
 console.log('[DEBUG] Institutions router registered');
+
+// Migration endpoints
+console.log('[DEBUG] Registering migrate router...');
+app.use('/api/migrate', migrateRouter);
+console.log('[DEBUG] Migrate router registered');
 
 // Drop tables endpoint (DANGER - development only)
 app.post('/admin/drop-tables', async (req, res) => {
