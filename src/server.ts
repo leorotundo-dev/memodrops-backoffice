@@ -13,6 +13,7 @@ import editalRouter from './routes/edital.js';
 import harvesterRouter from './routes/harvester.js';
 import dropsRouter from './routes/drops.js';
 import adminRouter from './routes/admin.js';
+import costsRouter from './routes/costs.js';
 
 // Criar diretório para uploads se não existir
 // Usar /data/uploads para persistência via Railway Volume
@@ -74,6 +75,7 @@ console.log('[DEBUG] Drops router registered');
 // Admin endpoints
 console.log('[DEBUG] Registering admin router...');
 app.use('/api/admin', adminRouter);
+app.use('/api/costs', costsRouter);
 console.log('[DEBUG] Admin router registered');
 
 // Drop tables endpoint (DANGER - development only)
