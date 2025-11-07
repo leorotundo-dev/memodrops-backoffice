@@ -21,6 +21,7 @@ import { query } from '../db/index.js';
 import { isDuplicate } from '../pipeline/dedupe.js';
 import { detectPII } from '../compliance/pii-detector.js';
 import { extractDocument, isDocumentURL } from '../utils/documentExtractor.js';
+import { downloadPDF, isPDFUrl, extractEditalName } from '../utils/pdfDownloader.js';
 export async function runAll() {
     console.log('🚀 Iniciando coleta do Harvester');
     const result = {
@@ -64,6 +65,16 @@ export async function runAll() {
                     if (isDocumentURL(item.url)) {
                         console.log(`[Harvest] Documento detectado: ${item.url}`);
                         pdfUrl = item.url;
+                        // Se for PDF, fazer download
+                        if (isPDFUrl(item.url)) {
+                            const editalName = extractEditalName(item.url, item.title);
+                            const downloadResult = await downloadPDF(item.url, editalName);
+                            if (downloadResult.success) {
+                                console.log(`[Harvest] 💾 PDF baixado: ${downloadResult.fileName}`);
+                                // Usar caminho local do PDF
+                                pdfUrl = downloadResult.filePath;
+                            }
+                        }
                         // Tentar extrair texto do documento
                         const extraction = await extractDocument(item.url);
                         if (extraction.text && extraction.text.length > 100) {
