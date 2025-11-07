@@ -14,7 +14,7 @@ import { harvestIBADE } from '../adapters/ibade.js';
 import { query } from '../db/index.js';
 import { isDuplicate } from '../pipeline/dedupe.js';
 import { detectPII } from '../compliance/pii-detector.js';
-import { isPdfUrl, processPdf } from '../pipeline/pdfProcessor.js';
+import { extractDocument, isDocumentURL } from '../utils/documentExtractor.js';
 
 interface HarvestResult {
   total: number;
@@ -60,22 +60,22 @@ export async function runAll(): Promise<HarvestResult> {
       
       for (const item of items) {
         try {
-          // Se for PDF, tentar extrair texto
+          // Se for documento (PDF, DOC, DOCX, etc), tentar extrair texto
           let content = item.content;
           let pdfUrl = null;
           
-          if (isPdfUrl(item.url)) {
-            console.log(`[Harvest] PDF detectado: ${item.url}`);
+          if (isDocumentURL(item.url)) {
+            console.log(`[Harvest] Documento detectado: ${item.url}`);
             pdfUrl = item.url;
             
-            // Tentar extrair texto do PDF
-            const extractedText = await processPdf(item.url);
+            // Tentar extrair texto do documento
+            const extraction = await extractDocument(item.url);
             
-            if (extractedText && extractedText.length > 100) {
-              content = extractedText;
-              console.log(`[Harvest] ✅ Texto extraído do PDF: ${extractedText.length} caracteres`);
+            if (extraction.text && extraction.text.length > 100) {
+              content = extraction.text;
+              console.log(`[Harvest] ✅ Texto extraído (${extraction.format.toUpperCase()}): ${extraction.text.length} caracteres`);
             } else {
-              console.log(`[Harvest] ⚠️  Não foi possível extrair texto do PDF, usando título`);
+              console.log(`[Harvest] ⚠️  Não foi possível extrair texto do documento, usando título`);
               content = item.content || item.title;
             }
           }

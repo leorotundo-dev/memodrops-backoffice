@@ -143,7 +143,6 @@ export async function processHarvestItems() {
       WHERE status = 'stored'
       AND content_text IS NOT NULL
       AND LENGTH(content_text) > 100
-      AND license IN ('public_domain', 'cc0', 'cc_by', 'cc_by_sa')
       AND processed_at IS NULL
       ORDER BY fetched_at DESC
       LIMIT 10
