@@ -51,7 +51,7 @@ router.post('/api/cleanup/reset-all', async (req, res) => {
     console.log('[Cleanup] Limpando todos os dados...');
     
     // TRUNCATE CASCADE limpa tudo de uma vez, respeitando foreign keys
-    await pool.query('TRUNCATE TABLE harvest_items, contests, editals, institutions, subjects, edital_subjects, contest_categories RESTART IDENTITY CASCADE');
+    await pool.query('TRUNCATE TABLE harvest_items, contests, editals, institutions, subjects, edital_subjects RESTART IDENTITY CASCADE');
     
     console.log('[Cleanup] ✅ Todos os dados limpos!');
     
