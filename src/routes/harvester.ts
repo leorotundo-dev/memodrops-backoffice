@@ -74,7 +74,38 @@ router.post('/api/harvester/ingest', async (req, res) => {
       categoryId = categoryResult.rows[0].id;
     }
 
-    // 2. Criar contest
+    // 2. Criar ou buscar instituição (banca)
+    const institutionName = structure.institution || sourceItem.source;
+    const institutionSlug = institutionName
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+
+    let institutionId: number | null = null;
+    
+    // Buscar instituição existente
+    const existingInst = await query(
+      'SELECT id FROM institutions WHERE LOWER(name) = LOWER($1) OR slug = $2',
+      [institutionName, institutionSlug]
+    );
+
+    if (existingInst.rows.length > 0) {
+      institutionId = existingInst.rows[0].id;
+    } else {
+      // Criar nova instituição
+      const newInst = await query(
+        `INSERT INTO institutions (name, slug, type, is_active, created_at)
+         VALUES ($1, $2, 'exam_board', true, NOW())
+         ON CONFLICT (name) DO UPDATE SET slug = EXCLUDED.slug
+         RETURNING id`,
+        [institutionName, institutionSlug]
+      );
+      institutionId = newInst.rows[0].id;
+    }
+
+    // 3. Criar contest
     const contestSlug = structure.contestName
       .toLowerCase()
       .normalize('NFD')
@@ -84,8 +115,8 @@ router.post('/api/harvester/ingest', async (req, res) => {
 
     const contestResult = await query(
       `INSERT INTO contests 
-       (category_id, title, slug, institution, exam_date, vacancies, salary, status, source_url, is_official, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, 'active', $8, true, NOW())
+       (category_id, title, slug, institution, institution_id, exam_date, vacancies, salary, status, source_url, is_official, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'active', $9, true, NOW())
        ON CONFLICT (slug) DO UPDATE SET
          title = EXCLUDED.title,
          institution = EXCLUDED.institution,
@@ -98,7 +129,8 @@ router.post('/api/harvester/ingest', async (req, res) => {
         categoryId,
         structure.contestName,
         contestSlug,
-        structure.institution || sourceItem.source,
+        institutionName,
+        institutionId,
         normalizeDate(structure.examDate) || null,
         structure.positions || null,
         normalizeSalary(structure.salary) || null,
