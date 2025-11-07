@@ -18,8 +18,7 @@ import { harvestIdecan } from '../adapters/idecan.js';
 import { harvestFGD } from '../adapters/fgd.js';
 import { harvestIBAM } from '../adapters/ibam.js';
 import { harvestConcursosNoBrasil } from '../adapters/concursosnobrasil.js';
-import { harvestGovBr } from '../adapters/govbr.js';
-import { harvestMGI } from '../adapters/mgi-cnpu.js';
+import { harvestGovBR } from '../adapters/govbr.js';
 import { query } from '../db/index.js';
 import { isDuplicate } from '../pipeline/dedupe.js';
 import { detectPII } from '../compliance/pii-detector.js';
@@ -64,8 +63,7 @@ export async function runAll(): Promise<HarvestResult> {
     { name: 'FGD', fn: harvestFGD },
     { name: 'IBAM', fn: harvestIBAM },
     { name: 'ConcursosNoBrasil', fn: harvestConcursosNoBrasil },
-    { name: 'GovBr', fn: harvestGovBr },
-    { name: 'MGI', fn: harvestMGI },
+    { name: 'GovBr', fn: harvestGovBR },
   ];
   
   for (const { name, fn } of sources) {

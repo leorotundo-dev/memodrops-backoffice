@@ -11,6 +11,14 @@ import { harvestQuadrix } from '../adapters/quadrix.js';
 import { harvestPCI } from '../adapters/pci.js';
 import { harvestCesgranrio } from '../adapters/cesgranrio.js';
 import { harvestIBADE } from '../adapters/ibade.js';
+import { harvestAOCP } from '../adapters/aocp.js';
+import { harvestIBFC } from '../adapters/ibfc.js';
+import { harvestConsulplan } from '../adapters/consulplan.js';
+import { harvestIdecan } from '../adapters/idecan.js';
+import { harvestFGD } from '../adapters/fgd.js';
+import { harvestIBAM } from '../adapters/ibam.js';
+import { harvestConcursosNoBrasil } from '../adapters/concursosnobrasil.js';
+import { harvestGovBR } from '../adapters/govbr.js';
 import { query } from '../db/index.js';
 import { isDuplicate } from '../pipeline/dedupe.js';
 import { detectPII } from '../compliance/pii-detector.js';
@@ -37,6 +45,14 @@ export async function runAll() {
         { name: 'PCI', fn: harvestPCI },
         { name: 'Cesgranrio', fn: harvestCesgranrio },
         { name: 'IBADE', fn: harvestIBADE },
+        { name: 'AOCP', fn: harvestAOCP },
+        { name: 'IBFC', fn: harvestIBFC },
+        { name: 'Consulplan', fn: harvestConsulplan },
+        { name: 'Idecan', fn: harvestIdecan },
+        { name: 'FGD', fn: harvestFGD },
+        { name: 'IBAM', fn: harvestIBAM },
+        { name: 'ConcursosNoBrasil', fn: harvestConcursosNoBrasil },
+        { name: 'GovBr', fn: harvestGovBR },
     ];
     for (const { name, fn } of sources) {
         try {

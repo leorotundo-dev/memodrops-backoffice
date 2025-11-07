@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import { fetchHTML } from '../fetch';
+import { fetchHTML } from './fetch.js';
 
 export interface HarvestItem {
   url: string;
@@ -28,7 +28,7 @@ export async function harvestConcursosNoBrasil(): Promise<HarvestItem[]> {
       const title = a.text().trim() || $(el).find('h3, h2').text().trim();
       if (!link || !title) return;
 
-      const fullUrl = link.startswith('http') ? link : (link.startswith('/') ? `https://concursosnobrasil.com${link}` : `${base}${link}`);
+      const fullUrl = link.startsWith('http') ? link : (link.startsWith('/') ? `https://concursosnobrasil.com${link}` : `${base}${link}`);
       const text = $(el).text().replace(/\s+/g, ' ').trim();
       if (/apostila|curso|preparatório/i.test(text)) return;
 

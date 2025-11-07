@@ -32,6 +32,17 @@ app.use(express.static(publicPath));
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', service: 'memodrops-backoffice' });
 });
+// Dashboard route - serve index.html for /dashboard and /dashboard/
+app.get(['/dashboard', '/dashboard/'], (req, res) => {
+    const dashboardPath = process.env.NODE_ENV === 'production'
+        ? 'dist/public/dashboard/index.html'
+        : 'public/dashboard/index.html';
+    res.sendFile(dashboardPath, { root: '.' });
+});
+// Root route - redirect to dashboard
+app.get('/', (req, res) => {
+    res.redirect('/dashboard');
+});
 // Setup endpoints
 app.use(setupRouter);
 // Hierarchy endpoints
