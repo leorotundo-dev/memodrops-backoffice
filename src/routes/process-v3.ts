@@ -2,7 +2,12 @@
 import { Router } from 'express';
 import { processHarvestItemsV3 } from '../jobs/process-harvest-v3.js';
 import { generateDrops } from '../services/microservices.js';
-import { query } from '../db/index.js';
+import { query, pool } from '../db/index.js';
+import { DropRepository } from '../services/dropRepository.js';
+import { DropCacheRepository } from '../services/dropCacheRepository.js';
+import { ExamBlueprintRepository } from '../services/examBlueprintRepository.js';
+import { generateDropCacheHash } from '../lib/hash.js';
+import { GOLD_RULE_CONFIG } from '../config/goldRule.js';
 
 const router = Router();
 
@@ -88,23 +93,63 @@ router.post('/api/process-v3/generate-drops', async (req, res) => {
       targetDropCount
     );
     
-    // Salvar drops no banco de dados
+    // Salvar drops no banco de dados usando repository
+    const dropRepo = new DropRepository(pool);
+    const dropCacheRepo = new DropCacheRepository(pool);
+    
+    // Buscar o blueprint mais recente para esta matéria (se existir)
+    const blueprintResult = await query(`
+      SELECT eb.id FROM exam_blueprints eb
+      INNER JOIN harvest_items hi ON eb.harvest_item_id = hi.id::text
+      INNER JOIN editals e ON e.content_text = hi.content_text
+      INNER JOIN edital_subjects es ON es.edital_id = e.id
+      WHERE es.subject_id = $1
+      ORDER BY eb.created_at DESC
+      LIMIT 1
+    `, [subjectId]);
+    
+    const blueprintId = blueprintResult.rows[0]?.id || 0;
+    
     for (const drop of dropsResponse.drops) {
-      await query(`
-        INSERT INTO drops (
-          subject_id, topic_name, title, content,
-          memorization_tip, difficulty, estimated_minutes,
-          created_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
-      `, [
-        subjectId,
-        drop.topicName,
-        drop.title,
-        drop.content,
-        drop.memorizationTip,
-        drop.difficulty,
-        drop.estimatedMinutes
-      ]);
+      // Gerar hash para cache
+      const cacheHash = generateDropCacheHash({
+        blueprintId,
+        subjectId: Number(subjectId),
+        dropType: 'generated',
+        additionalContext: drop.title
+      });
+      
+      // Verificar se já existe no cache
+      const exists = await dropCacheRepo.exists(cacheHash);
+      if (exists) {
+        console.log(`[Process V3] ⚠️  Drop duplicado (cache hit): ${drop.title}`);
+        continue;
+      }
+      
+      // Criar o drop
+      const createdDrop = await dropRepo.create({
+        blueprintId: blueprintId || 0,
+        subjectId: Number(subjectId),
+        dropText: `${drop.title}\n\n${drop.content}\n\nDica: ${drop.memorizationTip}`,
+        dropType: 'fundamento',
+        model: 'gpt-4o-mini',
+        promptVersion: GOLD_RULE_CONFIG.PROMPT_VERSION,
+        metadata: {
+          difficulty: drop.difficulty,
+          estimatedMinutes: drop.estimatedMinutes,
+          topicName: drop.topicName
+        }
+      });
+      
+      // Adicionar ao cache
+      if (blueprintId > 0) {
+        await dropCacheRepo.create({
+          blueprintId,
+          subjectId: Number(subjectId),
+          contentHash: cacheHash,
+          dropId: createdDrop.id
+        });
+      }
     }
     
     console.log(`[Process V3] ✅ ${dropsResponse.dropsCount} drops gerados e salvos`);

@@ -2,6 +2,7 @@
 import { pool } from '../db/index.js';
 import { extractEditalStructure } from '../services/microservices.js';
 import { normalizeSalary, normalizeDate, isValidContestTitle } from '../utils/dataFormatter.js';
+import { ExamBlueprintRepository } from '../services/examBlueprintRepository.js';
 
 /**
  * Pipeline V3: Processamento usando microserviços
@@ -65,6 +66,18 @@ export async function processHarvestItemsV3(): Promise<{
         }
         
         const { structure } = extractorResponse;
+        
+        // SALVAR O BLUEPRINT NO BANCO DE DADOS
+        const blueprintRepo = new ExamBlueprintRepository(pool);
+        const blueprint = await blueprintRepo.create({
+          harvestItemId: item.id,
+          model: 'gpt-4o-mini',
+          promptVersion: 'v1.0.0',
+          rawResponse: extractorResponse,
+          structuredData: structure
+        });
+        
+        console.log(`[Pipeline V3] ✅ Blueprint salvo no banco (ID: ${blueprint.id})`);
         
         // Validar se é um título de concurso válido
         if (!isValidContestTitle(structure.contest.title)) {
