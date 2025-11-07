@@ -693,7 +693,8 @@
                   <td class="p-4">${statusBadge}</td>
                   <td class="p-4">
                     <div class="flex items-center gap-2">
-                      <button onclick="viewInstitution(${inst.id})" class="text-blue-600 hover:text-blue-800 text-sm">👁️ Ver</button>
+                      <button onclick="navigateTo('contests', ${inst.id}, '${inst.name.replace(/'/g, "\\'")}')
+state.institutionId = ${inst.id}; state.institutionName = '${inst.name.replace(/'/g, "\\'")}'; renderContent();" class="text-blue-600 hover:text-blue-800 text-sm">👁️ Ver Concursos</button>
                       <button onclick="editInstitution(${inst.id})" class="text-slate-600 hover:text-slate-800 text-sm">✏️ Editar</button>
                     </div>
                   </td>
