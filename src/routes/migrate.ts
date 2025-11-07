@@ -5,6 +5,15 @@ const router = express.Router();
 
 // SQL da migration inline
 const INSTITUTIONS_MIGRATION_SQL = `
+-- Criar função para atualizar updated_at (se não existir)
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Criar tabela de instituições (bancas organizadoras)
 CREATE TABLE IF NOT EXISTS institutions (
   id SERIAL PRIMARY KEY,
