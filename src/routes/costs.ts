@@ -4,6 +4,8 @@
 
 import { Router } from 'express';
 import { query } from '../db/index.js';
+import fs from 'fs';
+import path from 'path';
 
 const router = Router();
 
@@ -65,8 +67,6 @@ router.get('/metrics', async (req, res) => {
     const dbSizeMB = parseInt(dbSizeResult.rows[0]?.size || '0') / (1024 * 1024);
     
     // Calcular uso do volume de uploads
-    const fs = require('fs');
-    const path = require('path');
     let uploadsSizeMB = 0;
     
     try {
