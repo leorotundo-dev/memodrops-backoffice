@@ -25,7 +25,7 @@ router.post('/cleanup', async (req, res) => {
     
     // Ler script de limpeza
     const cleanupScript = fs.readFileSync(
-      path.join(__dirname, '../../migrations/002_cleanup_test_data.sql'),
+      path.join(__dirname, '../migrations/002_cleanup_test_data.sql'),
       'utf-8'
     );
     
