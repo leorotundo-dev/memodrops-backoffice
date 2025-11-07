@@ -23,6 +23,7 @@ import processRouter from './routes/process.js';
 import errorsRouter from './routes/errors.js';
 import enrichRouter from './routes/enrich.js';
 import processV2Router from './routes/process-v2.js';
+import testV2Router from './routes/test-v2.js';
 
 // Criar diretório para uploads se não existir
 // Usar /data/uploads para persistência via Railway Volume
@@ -114,6 +115,9 @@ app.use(errorsRouter);
 
 // Process V2 endpoints (sem PDFs)
 app.use(processV2Router);
+
+// Test V2 endpoints
+app.use(testV2Router);
 
 // Institutions endpoints
 console.log('[DEBUG] Registering institutions router...');
