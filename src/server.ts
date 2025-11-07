@@ -28,6 +28,7 @@ import processV3Router from './routes/process-v3.js';
 import personalizationRouter from './routes/personalization.js';
 import qaRouter from './routes/qa.js';
 import pedagogyRouter from './routes/pedagogy.js';
+import ragRouter from './routes/rag.js';
 
 // Criar diretório para uploads se não existir
 // Usar /data/uploads para persistência via Railway Volume
@@ -128,6 +129,9 @@ app.use(qaRouter);
 
 // Pedagogy endpoints
 app.use(pedagogyRouter);
+
+// RAG endpoints
+app.use(ragRouter);
 
 // Test V2 endpoints
 app.use(testV2Router);
