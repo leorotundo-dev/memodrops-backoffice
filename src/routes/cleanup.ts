@@ -50,26 +50,8 @@ router.post('/api/cleanup/reset-all', async (req, res) => {
   try {
     console.log('[Cleanup] Limpando todos os dados...');
     
-    // Deletar vínculos
-    await pool.query('DELETE FROM edital_subjects');
-    await pool.query('DELETE FROM contest_categories');
-    
-    // Deletar editais e concursos
-    await pool.query('DELETE FROM editals');
-    await pool.query('DELETE FROM contests');
-    
-    // Deletar harvest_items
-    await pool.query('DELETE FROM harvest_items');
-    
-    // Resetar institutions (manter apenas as pré-cadastradas)
-    await pool.query(`
-      DELETE FROM institutions 
-      WHERE slug NOT IN (
-        'fgv', 'cebraspe', 'fcc', 'cesgranrio', 'vunesp', 
-        'ibfc', 'aocp', 'consulplan', 'idecan', 'quadrix', 
-        'instituto-aocp', 'fundatec'
-      )
-    `);
+    // TRUNCATE CASCADE limpa tudo de uma vez, respeitando foreign keys
+    await pool.query('TRUNCATE TABLE harvest_items, contests, editals, institutions, subjects, edital_subjects, contest_categories RESTART IDENTITY CASCADE');
     
     console.log('[Cleanup] ✅ Todos os dados limpos!');
     
@@ -77,9 +59,13 @@ router.post('/api/cleanup/reset-all', async (req, res) => {
       success: true,
       message: 'Todos os dados foram limpos. Banco resetado para estado inicial.'
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('[Cleanup] Erro ao limpar dados:', error);
-    res.status(500).json({ error: 'Erro ao limpar dados' });
+    res.status(500).json({ 
+      success: false,
+      error: 'Erro ao limpar dados',
+      details: error.message 
+    });
   }
 });
 
