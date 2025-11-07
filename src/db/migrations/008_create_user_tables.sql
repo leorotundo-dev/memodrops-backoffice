@@ -1,17 +1,25 @@
 -- Migration: 008_create_user_tables
--- Descrição: Cria as tabelas users, user_stats e daily_plans para personalização
+-- Descrição: Adiciona colunas à tabela users existente e cria tabelas user_stats e daily_plans
 -- Data: 2025-11-07
 
--- Tabela de usuários
-CREATE TABLE IF NOT EXISTS users (
-  id SERIAL PRIMARY KEY,
-  email TEXT NOT NULL UNIQUE,
-  name TEXT,
-  avatar_url TEXT,
-  preferences JSONB DEFAULT '{}'::jsonb, -- preferências do usuário (temas, notificações, etc.)
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- Adicionar colunas à tabela users existente (se não existirem)
+DO $$ 
+BEGIN
+  -- Adicionar avatar_url se não existir
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='avatar_url') THEN
+    ALTER TABLE users ADD COLUMN avatar_url TEXT;
+  END IF;
+  
+  -- Adicionar preferences se não existir
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='preferences') THEN
+    ALTER TABLE users ADD COLUMN preferences JSONB DEFAULT '{}'::jsonb;
+  END IF;
+  
+  -- Adicionar updated_at se não existir
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='updated_at') THEN
+    ALTER TABLE users ADD COLUMN updated_at TIMESTAMPTZ DEFAULT NOW();
+  END IF;
+END $$;
 
 -- Tabela de estatísticas de usuário (respostas aos drops)
 CREATE TABLE IF NOT EXISTS user_stats (
@@ -41,18 +49,18 @@ CREATE TABLE IF NOT EXISTS daily_plans (
 );
 
 -- Índices para melhorar performance
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_created_at ON users(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_created_at ON users(created_at DESC);
 
-CREATE INDEX idx_user_stats_user ON user_stats(user_id);
-CREATE INDEX idx_user_stats_drop ON user_stats(drop_id);
-CREATE INDEX idx_user_stats_answered_at ON user_stats(answered_at DESC);
-CREATE INDEX idx_user_stats_user_drop ON user_stats(user_id, drop_id);
+CREATE INDEX IF NOT EXISTS idx_user_stats_user ON user_stats(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_stats_drop ON user_stats(drop_id);
+CREATE INDEX IF NOT EXISTS idx_user_stats_answered_at ON user_stats(answered_at DESC);
+CREATE INDEX IF NOT EXISTS idx_user_stats_user_drop ON user_stats(user_id, drop_id);
 
-CREATE INDEX idx_daily_plans_user ON daily_plans(user_id);
-CREATE INDEX idx_daily_plans_date ON daily_plans(date DESC);
-CREATE INDEX idx_daily_plans_user_date ON daily_plans(user_id, date);
-CREATE INDEX idx_daily_plans_status ON daily_plans(status);
+CREATE INDEX IF NOT EXISTS idx_daily_plans_user ON daily_plans(user_id);
+CREATE INDEX IF NOT EXISTS idx_daily_plans_date ON daily_plans(date DESC);
+CREATE INDEX IF NOT EXISTS idx_daily_plans_user_date ON daily_plans(user_id, date);
+CREATE INDEX IF NOT EXISTS idx_daily_plans_status ON daily_plans(status);
 
 -- Comentários para documentação
 COMMENT ON TABLE users IS 'Usuários do sistema MemoDrops';
