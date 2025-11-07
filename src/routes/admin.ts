@@ -6,14 +6,8 @@
 
 import { Router } from 'express';
 import { query } from '../db/index.js';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
 const router = Router();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 /**
  * POST /api/admin/cleanup
@@ -23,14 +17,54 @@ router.post('/cleanup', async (req, res) => {
   try {
     console.log('[Admin] Iniciando limpeza de dados de teste...');
     
-    // Ler script de limpeza
-    const cleanupScript = fs.readFileSync(
-      path.join(__dirname, '../migrations/002_cleanup_test_data.sql'),
-      'utf-8'
-    );
+    // SQL de limpeza inline
+    const cleanupSQL = `
+      -- Limpar tabela de itens coletados (harvest_items)
+      TRUNCATE TABLE harvest_items CASCADE;
+      
+      -- Limpar tabela de contests (se existir)
+      DO $$ 
+      BEGIN
+          IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'contests') THEN
+              TRUNCATE TABLE contests CASCADE;
+          END IF;
+      END $$;
+      
+      -- Limpar tabela de subjects (se existir)
+      DO $$ 
+      BEGIN
+          IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'subjects') THEN
+              TRUNCATE TABLE subjects CASCADE;
+          END IF;
+      END $$;
+      
+      -- Limpar tabela de topics (se existir)
+      DO $$ 
+      BEGIN
+          IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'topics') THEN
+              TRUNCATE TABLE topics CASCADE;
+          END IF;
+      END $$;
+      
+      -- Limpar tabela de drops (se existir)
+      DO $$ 
+      BEGIN
+          IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'drops') THEN
+              TRUNCATE TABLE drops CASCADE;
+          END IF;
+      END $$;
+      
+      -- Limpar tabela de user_drops (se existir)
+      DO $$ 
+      BEGIN
+          IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'user_drops') THEN
+              TRUNCATE TABLE user_drops CASCADE;
+          END IF;
+      END $$;
+    `;
     
     // Executar limpeza
-    await query(cleanupScript);
+    await query(cleanupSQL);
     
     console.log('[Admin] ✅ Limpeza concluída com sucesso!');
     
