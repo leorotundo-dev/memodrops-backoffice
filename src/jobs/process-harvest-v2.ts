@@ -202,23 +202,46 @@ export async function processHarvestItemsV2(): Promise<{
 }
 
 async function getOrCreateInstitution(name: string): Promise<number> {
-  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-  
-  const existing = await pool.query(
-    'SELECT id FROM institutions WHERE slug = $1',
-    [slug]
-  );
-  
-  if (existing.rows.length > 0) {
-    return existing.rows[0].id;
+  if (!name || name.trim().length === 0) {
+    name = 'Não informado';
   }
   
-  const result = await pool.query(
-    'INSERT INTO institutions (name, slug, created_at) VALUES ($1, $2, NOW()) RETURNING id',
-    [name, slug]
+  const slug = name.toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, ''); // Remove hífens do início/fim
+  
+  // Buscar por nome primeiro (case insensitive)
+  const existingByName = await pool.query(
+    'SELECT id FROM institutions WHERE LOWER(name) = LOWER($1)',
+    [name]
   );
   
-  return result.rows[0].id;
+  if (existingByName.rows.length > 0) {
+    return existingByName.rows[0].id;
+  }
+  
+  // Tentar criar
+  try {
+    const result = await pool.query(
+      'INSERT INTO institutions (name, slug, created_at) VALUES ($1, $2, NOW()) RETURNING id',
+      [name, slug]
+    );
+    return result.rows[0].id;
+  } catch (err: any) {
+    // Se der erro de duplicata, buscar novamente
+    if (err.code === '23505') {
+      const existing = await pool.query(
+        'SELECT id FROM institutions WHERE slug = $1 OR LOWER(name) = LOWER($2)',
+        [slug, name]
+      );
+      if (existing.rows.length > 0) {
+        return existing.rows[0].id;
+      }
+    }
+    throw err;
+  }
 }
 
 async function getOrCreateSubject(name: string): Promise<number> {
