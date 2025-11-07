@@ -74,18 +74,29 @@ router.delete('/api/categories/:id', async (req, res) => {
 // ========================================
 
 router.get('/api/contests', async (req, res) => {
-  const { category_id } = req.query;
+  const { category_id, institution_id } = req.query;
   try {
     let query = `
-      SELECT c.*, cat.name as category_name
+      SELECT c.*, cat.name as category_name,
+        (SELECT COUNT(*) FROM editals e WHERE e.contest_id = c.id) as editals_count
       FROM contests c
       LEFT JOIN categories cat ON c.category_id = cat.id
     `;
     const params: any[] = [];
+    const conditions: string[] = [];
     
     if (category_id) {
-      query += ' WHERE c.category_id = $1';
+      conditions.push(`c.category_id = $${params.length + 1}`);
       params.push(category_id);
+    }
+    
+    if (institution_id) {
+      conditions.push(`c.institution_id = $${params.length + 1}`);
+      params.push(institution_id);
+    }
+    
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ');
     }
     
     query += ' ORDER BY c.exam_date DESC NULLS LAST, c.title';

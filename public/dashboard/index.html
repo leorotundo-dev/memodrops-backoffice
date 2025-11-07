@@ -74,9 +74,11 @@
       // ESTADO DA NAVEGAÇÃO
       // ========================================
       const state = {
-        level: 'categories',  // categories | contests | editals | subjects | topics | subtopics
+        level: 'categories',  // categories | institutions | contests | editals | subjects | topics | subtopics
         categoryId: null,
         categoryName: null,
+        institutionId: null,
+        institutionName: null,
         contestId: null,
         contestName: null,
         editalId: null,
@@ -98,6 +100,21 @@
         if (level === 'home' || level === 'categories') {
           state.categoryId = null;
           state.categoryName = null;
+          state.institutionId = null;
+          state.institutionName = null;
+          state.contestId = null;
+          state.contestName = null;
+          state.editalId = null;
+          state.editalName = null;
+          state.subjectId = null;
+          state.subjectName = null;
+          state.topicId = null;
+          state.topicName = null;
+        } else if (level === 'institutions') {
+          state.categoryId = id;
+          state.categoryName = name;
+          state.institutionId = null;
+          state.institutionName = null;
           state.contestId = null;
           state.contestName = null;
           state.editalId = null;
@@ -107,8 +124,8 @@
           state.topicId = null;
           state.topicName = null;
         } else if (level === 'contests') {
-          state.categoryId = id;
-          state.categoryName = name;
+          state.institutionId = id;
+          state.institutionName = name;
           state.contestId = null;
           state.contestName = null;
           state.editalId = null;
@@ -154,7 +171,12 @@
 
         if (state.categoryId) {
           html += '<span class="text-slate-400">›</span>';
-          html += `<div class="breadcrumb-item" onclick="navigateTo('contests', ${state.categoryId}, '${state.categoryName}')"><span>📂</span><span>${state.categoryName}</span></div>`;
+          html += `<div class="breadcrumb-item" onclick="navigateTo('institutions', ${state.categoryId}, '${state.categoryName}')"><span>📂</span><span>${state.categoryName}</span></div>`;
+        }
+
+        if (state.institutionId) {
+          html += '<span class="text-slate-400">›</span>';
+          html += `<div class="breadcrumb-item" onclick="navigateTo('contests', ${state.institutionId}, '${state.institutionName}')"><span>🏛️</span><span>${state.institutionName}</span></div>`;
         }
 
         if (state.contestId) {
@@ -186,6 +208,9 @@
         switch(state.level) {
           case 'categories':
             renderCategories();
+            break;
+          case 'institutions':
+            renderInstitutions();
             break;
           case 'contests':
             renderContests();
@@ -242,18 +267,70 @@
         }
       }
 
+      async function renderInstitutions() {
+        const main = document.getElementById('main-content');
+        main.innerHTML = '<div class="card"><p class="text-center text-slate-500">Carregando bancas...</p></div>';
+
+        try {
+          const res = await fetch(`/api/institutions?active=true`);
+          const data = await res.json();
+          const institutions = data.data || [];
+
+          let html = '<div class="card">';
+          html += '<div class="flex items-center justify-between mb-6">';
+          html += `<h2 class="text-xl font-semibold">Bancas de ${state.categoryName}</h2>`;
+          html += '</div>';
+          html += '<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">';
+
+          institutions.forEach(inst => {
+            const contestCount = inst.contest_count || 0;
+            const typeIcons = {
+              'exam_board': '🏛️',
+              'government': '🏛️',
+              'university': '🎓',
+              'other': '💼'
+            };
+            const icon = typeIcons[inst.type] || '🏛️';
+            
+            html += `
+              <div class="folder-card" onclick="navigateTo('contests', ${inst.id}, '${inst.name}')">
+                <div class="flex items-start justify-between">
+                  <div class="text-3xl">${icon}</div>
+                  <span class="pill bg-blue-50 text-blue-700 border-blue-200">${contestCount}</span>
+                </div>
+                <div class="font-semibold text-lg mt-2">${inst.name}</div>
+                ${inst.full_name && inst.full_name !== inst.name ? `<div class="text-xs text-slate-500 mt-1">${inst.full_name}</div>` : ''}
+                <div class="flex items-center gap-4 text-xs text-slate-400 mt-3">
+                  <span>🎯 ${contestCount} concursos</span>
+                </div>
+              </div>
+            `;
+          });
+
+          if (institutions.length === 0) {
+            html += '<div class="col-span-3 text-center text-slate-500 py-8">Nenhuma banca cadastrada nesta categoria</div>';
+          }
+
+          html += '</div></div>';
+          main.innerHTML = html;
+        } catch (err) {
+          console.error('Erro ao carregar bancas:', err);
+          main.innerHTML = '<div class="card"><p class="text-red-600">Erro ao carregar bancas</p></div>';
+        }
+      }
+
       async function renderContests() {
         const main = document.getElementById('main-content');
         main.innerHTML = '<div class="card"><p class="text-center text-slate-500">Carregando concursos...</p></div>';
 
         try {
-          const res = await fetch(`/api/contests?category_id=${state.categoryId}`);
+          const res = await fetch(`/api/contests?institution_id=${state.institutionId}`);
           const data = await res.json();
           const contests = data.contests || data;
 
           let html = '<div class="card">';
           html += '<div class="flex items-center justify-between mb-6">';
-          html += `<h2 class="text-xl font-semibold">Concursos de ${state.categoryName}</h2>`;
+          html += `<h2 class="text-xl font-semibold">Concursos da ${state.institutionName}</h2>`;
           html += '<button onclick="addContest()" class="btn-primary btn-sm">+ Novo Concurso</button>';
           html += '</div>';
           html += '<div class="grid md:grid-cols-2 gap-4">';
