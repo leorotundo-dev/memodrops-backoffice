@@ -45,6 +45,44 @@ router.post('/api/harvest/run', async (req, res) => {
   }
 });
 
+// Endpoint para limpar TUDO e começar do zero
+router.post('/api/cleanup/reset-all', async (req, res) => {
+  try {
+    console.log('[Cleanup] Limpando todos os dados...');
+    
+    // Deletar vínculos
+    await pool.query('DELETE FROM edital_subjects');
+    await pool.query('DELETE FROM contest_categories');
+    
+    // Deletar editais e concursos
+    await pool.query('DELETE FROM editals');
+    await pool.query('DELETE FROM contests');
+    
+    // Deletar harvest_items
+    await pool.query('DELETE FROM harvest_items');
+    
+    // Resetar institutions (manter apenas as pré-cadastradas)
+    await pool.query(`
+      DELETE FROM institutions 
+      WHERE slug NOT IN (
+        'fgv', 'cebraspe', 'fcc', 'cesgranrio', 'vunesp', 
+        'ibfc', 'aocp', 'consulplan', 'idecan', 'quadrix', 
+        'instituto-aocp', 'fundatec'
+      )
+    `);
+    
+    console.log('[Cleanup] ✅ Todos os dados limpos!');
+    
+    res.json({
+      success: true,
+      message: 'Todos os dados foram limpos. Banco resetado para estado inicial.'
+    });
+  } catch (error) {
+    console.error('[Cleanup] Erro ao limpar dados:', error);
+    res.status(500).json({ error: 'Erro ao limpar dados' });
+  }
+});
+
 // Endpoint para resetar itens com erro para reprocessar
 router.post('/api/cleanup/reset-errors', async (req, res) => {
   try {
