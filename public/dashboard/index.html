@@ -336,6 +336,13 @@
           html += '<div class="grid md:grid-cols-2 gap-4">';
 
           contests.forEach(contest => {
+            const vagas = contest.vacancies ? `👥 ${contest.vacancies} vagas` : '';
+            const salario = contest.salary ? `💰 ${contest.salary}` : '';
+            const local = contest.location ? `📍 ${contest.location}` : '';
+            const nivel = contest.education_level ? `🎓 ${contest.education_level}` : '';
+            
+            const infos = [vagas, salario, local, nivel].filter(x => x).join(' • ');
+            
             html += `
               <div class="folder-card" onclick="navigateTo('editals', ${contest.id}, '${contest.title}')">
                 <div class="flex items-start justify-between">
@@ -344,9 +351,10 @@
                 </div>
                 <div class="font-semibold text-lg mt-2">${contest.title}</div>
                 <div class="text-sm text-slate-500 mt-1">${contest.institution || ''}</div>
+                ${infos ? `<div class="text-xs text-slate-600 mt-2">${infos}</div>` : ''}
                 <div class="flex items-center gap-4 text-xs text-slate-400 mt-3">
                   <span>📄 ${contest.editals_count || 0} editais</span>
-                  <span>📅 ${new Date(contest.created_at).toLocaleDateString('pt-BR')}</span>
+                  ${contest.exam_date ? `<span>📅 ${new Date(contest.exam_date).toLocaleDateString('pt-BR')}</span>` : ''}
                 </div>
               </div>
             `;
