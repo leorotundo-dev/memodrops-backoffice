@@ -19,6 +19,9 @@ ALTER TABLE contests ADD COLUMN IF NOT EXISTS result_date DATE;
 -- Adicionar coluna structured_data nos editais
 ALTER TABLE editals ADD COLUMN IF NOT EXISTS structured_data JSONB;
 
+-- Adicionar coluna meta nos concursos
+ALTER TABLE contests ADD COLUMN IF NOT EXISTS meta JSONB;
+
 -- Criar função para atualizar updated_at (se não existir)
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
