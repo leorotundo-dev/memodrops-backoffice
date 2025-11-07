@@ -10,6 +10,8 @@ import { setupRouter } from './setup-endpoint.js';
 import { autoSetupDatabase } from './db/auto-setup.js';
 import hierarchyRouter from './routes/hierarchy.js';
 import editalRouter from './routes/edital.js';
+import harvesterRouter from './routes/harvester.js';
+import dropsRouter from './routes/drops.js';
 
 // Criar diretório para uploads se não existir
 // Usar /data/uploads para persistência via Railway Volume
@@ -44,6 +46,16 @@ app.use(hierarchyRouter);
 console.log('[DEBUG] Registering edital router...');
 app.use(editalRouter);
 console.log('[DEBUG] Edital router registered');
+
+// Harvester endpoints
+console.log('[DEBUG] Registering harvester router...');
+app.use(harvesterRouter);
+console.log('[DEBUG] Harvester router registered');
+
+// Drops endpoints
+console.log('[DEBUG] Registering drops router...');
+app.use(dropsRouter);
+console.log('[DEBUG] Drops router registered');
 
 // Drop tables endpoint (DANGER - development only)
 app.post('/admin/drop-tables', async (req, res) => {

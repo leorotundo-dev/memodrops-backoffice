@@ -4,10 +4,24 @@
     "builder": "NIXPACKS",
     "buildCommand": "pnpm install && pnpm build"
   },
-  "cron": {
-    "schedule": "0 */6 * * *",
-    "command": "node dist/jobs/harvest.js"
-  },
+  "cron": [
+    {
+      "schedule": "0 */6 * * *",
+      "command": "node dist/jobs/harvest.js"
+    },
+    {
+      "schedule": "0 * * * *",
+      "command": "node dist/jobs/process-content.js"
+    },
+    {
+      "schedule": "30 * * * *",
+      "command": "node dist/jobs/generate-drops.js"
+    },
+    {
+      "schedule": "0 6 * * *",
+      "command": "node dist/jobs/distribute-drops.js"
+    }
+  ],
   "deploy": {
     "startCommand": "node dist/server.js",
     "healthcheckPath": "/health",

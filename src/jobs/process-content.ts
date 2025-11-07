@@ -105,14 +105,12 @@ Se não for um edital de concurso, retorne null.`;
  */
 async function sendToMemoDrops(item: HarvestItem, structure: StructuredContent): Promise<boolean> {
   try {
-    const MEMODROPS_URL = process.env.MEMODROPS_URL || 'http://localhost:3000';
-    const API_KEY = process.env.MEMODROPS_API_KEY;
+    const BACKOFFICE_URL = process.env.BACKOFFICE_URL || 'http://localhost:8080';
 
-    const response = await fetch(`${MEMODROPS_URL}/api/trpc/harvester.ingestProcessedContent`, {
+    const response = await fetch(`${BACKOFFICE_URL}/api/harvester/ingest`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(API_KEY && { 'Authorization': `Bearer ${API_KEY}` }),
       },
       body: JSON.stringify({
         sourceItem: {
