@@ -142,7 +142,7 @@ export async function processHarvestItems() {
       SELECT * FROM harvest_items
       WHERE status = 'fetched'
       AND content_text IS NOT NULL
-      AND LENGTH(content_text) > 100
+      AND LENGTH(content_text) > 30
       AND processed_at IS NULL
       ORDER BY fetched_at DESC
       LIMIT 10
