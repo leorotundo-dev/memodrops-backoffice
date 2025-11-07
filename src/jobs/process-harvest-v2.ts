@@ -33,7 +33,7 @@ export async function processHarvestItemsV2(): Promise<{
       FROM harvest_items
       WHERE status = 'fetched'
       ORDER BY fetched_at DESC
-      LIMIT 20
+      LIMIT 100
     `);
     
     console.log(`[Pipeline V2] ${itemsResult.rows.length} itens para processar`);
