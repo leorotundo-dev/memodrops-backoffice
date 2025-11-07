@@ -9,7 +9,6 @@ import { calculateIC, getTopicGaps } from './ic-engine/calculator.js';
 import { setupRouter } from './setup-endpoint.js';
 import { autoSetupDatabase } from './db/auto-setup.js';
 import hierarchyRouter from './routes/hierarchy.js';
-import editalRouter from './routes/edital.js';
 import harvesterRouter from './routes/harvester.js';
 import dropsRouter from './routes/drops.js';
 import adminRouter from './routes/admin.js';
@@ -17,10 +16,9 @@ import costsRouter from './routes/costs.js';
 import institutionsRouter from './routes/institutions.js';
 import migrateRouter from './routes/migrate.js';
 import cleanupRouter from './routes/cleanup.js';
-import pdfRouter from './routes/pdf.js';
 import processRouter from './routes/process.js';
 import errorsRouter from './routes/errors.js';
-import enrichRouter from './routes/enrich.js';
+import processV2Router from './routes/process-v2.js';
 // Criar diretório para uploads se não existir
 // Usar /data/uploads para persistência via Railway Volume
 const uploadsDir = process.env.UPLOAD_DIR || '/data/uploads';
@@ -68,10 +66,6 @@ app.get('/', (req, res) => {
 app.use(setupRouter);
 // Hierarchy endpoints
 app.use(hierarchyRouter);
-// Edital endpoints
-console.log('[DEBUG] Registering edital router...');
-app.use(editalRouter);
-console.log('[DEBUG] Edital router registered');
 // Harvester endpoints
 console.log('[DEBUG] Registering harvester router...');
 app.use(harvesterRouter);
@@ -87,14 +81,12 @@ app.use('/api/costs', costsRouter);
 console.log('[DEBUG] Admin router registered');
 // Cleanup endpoints
 app.use(cleanupRouter);
-// PDF endpoints
-app.use(pdfRouter);
 // Process endpoints
 app.use(processRouter);
 // Errors analysis endpoints
 app.use(errorsRouter);
-// Enrich endpoints
-app.use(enrichRouter);
+// Process V2 endpoints (sem PDFs)
+app.use(processV2Router);
 // Institutions endpoints
 console.log('[DEBUG] Registering institutions router...');
 app.use('/api/institutions', institutionsRouter);
