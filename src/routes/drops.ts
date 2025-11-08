@@ -1,7 +1,7 @@
 // src/routes/drops.ts
 import { Router } from 'express';
 import { query } from '../db';
-import { validateBody, GenerateDropsSchema } from '../utils/validation';
+import { validateBody, GenerateDropsSchema } from '../utils/validation.js';
 
 const router = Router();
 

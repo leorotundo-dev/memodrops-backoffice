@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MemoDrops • Backoffice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="data:,">
+    <style>
+      .card { @apply rounded-2xl border bg-white shadow-sm p-6; }
+      .pill { @apply text-xs px-2 py-0.5 rounded-full border; }
+      .mono { font-variant-numeric: tabular-nums; }
+      .btn-primary { @apply px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition; }
+      .btn-secondary { @apply px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 transition; }
+      .btn-sm { @apply px-3 py-1 text-sm; }
+      .folder-card {
+        @apply card cursor-pointer hover:shadow-md hover:border-blue-300 transition-all;
+      }
+      .folder-card:hover {
+        transform: translateY(-2px);
+      }
+      .breadcrumb-item {
+        @apply flex items-center gap-2 text-slate-600 hover:text-blue-600 cursor-pointer transition;
+      }
+      .breadcrumb-item:last-child {
+        @apply text-slate-900 font-medium cursor-default;
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-900">
+    <div class="max-w-7xl mx-auto p-4 space-y-4">
+      
+      <!-- Header -->
+      <header class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold">MemoDrops • Backoffice</h1>
+          <p class="text-sm text-slate-500">Gestão hierárquica de conteúdo educacional</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="showUtilityTab('institutions')" class="btn-secondary btn-sm">🏛️ Bancas</button>
+          <button onclick="showUtilityTab('harvester')" class="btn-secondary btn-sm">🤖 Harvester</button>
+          <button onclick="showUtilityTab('stats')" class="btn-secondary btn-sm">📊 Estatísticas</button>
+          <button onclick="showUtilityTab('costs')" class="btn-secondary btn-sm">💰 Custos</button>
+          <span id="env-status" class="pill bg-green-50 text-green-700 border-green-200">● Online</span>
+        </div>
+      </header>
+
+      <!-- Breadcrumb Navigation -->
+      <nav id="breadcrumb" class="flex items-center gap-2 text-sm">
+        <div class="breadcrumb-item" onclick="navigateTo('home')">
+          <span>🏠</span>
+          <span>Início</span>
+        </div>
+      </nav>
+
+      <!-- Main Content Area -->
+      <main id="main-content" class="space-y-4">
+        <!-- Conteúdo dinâmico será inserido aqui -->
+      </main>
+
+      <!-- Utility Tabs (Harvester, Stats, Costs) -->
+      <div id="utility-panel" class="hidden space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 id="utility-title" class="text-xl font-bold"></h2>
+          <button onclick="hideUtilityPanel()" class="btn-secondary btn-sm">✕ Fechar</button>
+        </div>
+        <div id="utility-content"></div>
+      </div>
+
+    </div>
+
+    <script>
+      // ========================================
+      // ESTADO DA NAVEGAÇÃO
+      // ========================================
+      const state = {
+        level: 'categories',  // categories | institutions | contests | editals | subjects | topics | subtopics
+        categoryId: null,
+        categoryName: null,
+        institutionId: null,
+        institutionName: null,
+        contestId: null,
+        contestName: null,
+        editalId: null,
+        editalName: null,
+        subjectId: null,
+        subjectName: null,
+        topicId: null,
+        topicName: null
+      };
+
+      // ========================================
+      // NAVEGAÇÃO
+      // ========================================
+      function navigateTo(level, id = null, name = null) {
+        // Atualizar estado
+        state.level = level;
+        
+        // Resetar níveis inferiores
+        if (level === 'home' || level === 'categories') {
+          state.categoryId = null;
+          state.categoryName = null;
+          state.institutionId = null;
+          state.institutionName = null;
+          state.contestId = null;
+          state.contestName = null;
+          state.editalId = null;
+          state.editalName = null;
+          state.subjectId = null;
+          state.subjectName = null;
+          state.topicId = null;
+          state.topicName = null;
+        } else if (level === 'institutions') {
+          state.categoryId = id;
+          state.categoryName = name;
+          state.institutionId = null;
+          state.institutionName = null;
+          state.contestId = null;
+          state.contestName = null;
+          state.editalId = null;
+          state.editalName = null;
+          state.subjectId = null;
+          state.subjectName = null;
+          state.topicId = null;
+          state.topicName = null;
+        } else if (level === 'contests') {
+          state.institutionId = id;
+          state.institutionName = name;
+          state.contestId = null;
+          state.contestName = null;
+          state.editalId = null;
+          state.editalName = null;
+          state.subjectId = null;
+          state.subjectName = null;
+          state.topicId = null;
+          state.topicName = null;
+        } else if (level === 'editals') {
+          state.contestId = id;
+          state.contestName = name;
+          state.editalId = null;
+          state.editalName = null;
+          state.subjectId = null;
+          state.subjectName = null;
+          state.topicId = null;
+          state.topicName = null;
+        } else if (level === 'subjects') {
+          state.editalId = id;
+          state.editalName = name;
+          state.subjectId = null;
+          state.subjectName = null;
+          state.topicId = null;
+          state.topicName = null;
+        } else if (level === 'topics') {
+          state.subjectId = id;
+          state.subjectName = name;
+          state.topicId = null;
+          state.topicName = null;
+        } else if (level === 'subtopics') {
+          state.topicId = id;
+          state.topicName = name;
+        }
+
+        // Renderizar
+        renderBreadcrumb();
+        renderContent();
+      }
+
+      function renderBreadcrumb() {
+        const breadcrumb = document.getElementById('breadcrumb');
+        let html = '<div class="breadcrumb-item" onclick="navigateTo(\'categories\')"><span>🏠</span><span>Início</span></div>';
+
+        if (state.categoryId) {
+          html += '<span class="text-slate-400">›</span>';
+          html += `<div class="breadcrumb-item" onclick="navigateTo('institutions', ${state.categoryId}, '${state.categoryName}')"><span>📂</span><span>${state.categoryName}</span></div>`;
+        }
+
+        if (state.institutionId) {
+          html += '<span class="text-slate-400">›</span>';
+          html += `<div class="breadcrumb-item" onclick="navigateTo('contests', ${state.institutionId}, '${state.institutionName}')"><span>🏛️</span><span>${state.institutionName}</span></div>`;
+        }
+
+        if (state.contestId) {
+          html += '<span class="text-slate-400">›</span>';
+          html += `<div class="breadcrumb-item" onclick="navigateTo('editals', ${state.contestId}, '${state.contestName}')"><span>🎯</span><span>${state.contestName}</span></div>`;
+        }
+
+        if (state.editalId) {
+          html += '<span class="text-slate-400">›</span>';
+          html += `<div class="breadcrumb-item" onclick="navigateTo('subjects', ${state.editalId}, '${state.editalName}')"><span>📄</span><span>${state.editalName}</span></div>`;
+        }
+
+        if (state.subjectId) {
+          html += '<span class="text-slate-400">›</span>';
+          html += `<div class="breadcrumb-item" onclick="navigateTo('topics', ${state.subjectId}, '${state.subjectName}')"><span>📚</span><span>${state.subjectName}</span></div>`;
+        }
+
+        if (state.topicId) {
+          html += '<span class="text-slate-400">›</span>';
+          html += `<div class="breadcrumb-item"><span>📝</span><span>${state.topicName}</span></div>`;
+        }
+
+        breadcrumb.innerHTML = html;
+      }
+
+      function renderContent() {
+        const main = document.getElementById('main-content');
+        
+        switch(state.level) {
+          case 'categories':
+            renderCategories();
+            break;
+          case 'institutions':
+            renderInstitutions();
+            break;
+          case 'contests':
+            renderContests();
+            break;
+          case 'editals':
+            renderEditals();
+            break;
+          case 'subjects':
+            renderSubjects();
+            break;
+          case 'topics':
+            renderTopics();
+            break;
+          case 'subtopics':
+            renderSubtopics();
+            break;
+        }
+      }
+
+      // ========================================
+      // RENDERIZAÇÃO DE CADA NÍVEL
+      // ========================================
+      async function renderCategories() {
+        const main = document.getElementById('main-content');
+        main.innerHTML = '<div class="card"><p class="text-center text-slate-500">Carregando categorias...</p></div>';
+
+        try {
+          const res = await fetch('/api/categories');
+          const data = await res.json();
+          const categories = data.categories || data;
+
+          let html = '<div class="card">';
+          html += '<div class="flex items-center justify-between mb-6">';
+          html += '<h2 class="text-xl font-semibold">Categorias de Objetivos</h2>';
+          html += '<button onclick="addCategory()" class="btn-primary btn-sm">+ Nova Categoria</button>';
+          html += '</div>';
+          html += '<div class="grid md:grid-cols-3 gap-4">';
+
+          categories.forEach(cat => {
+            html += `
+              <div class="folder-card" onclick="navigateTo('institutions', ${cat.id}, '${cat.name}')">
+                <div class="text-4xl mb-2">${cat.icon || '📂'}</div>
+                <div class="font-semibold text-lg">${cat.name}</div>
+                <div class="text-sm text-slate-500 mt-1">${cat.description || ''}</div>
+                <div class="text-xs text-slate-400 mt-2">${cat.contests_count || 0} concursos</div>
+              </div>
+            `;
+          });
+
+          html += '</div></div>';
+          main.innerHTML = html;
+        } catch (err) {
+          main.innerHTML = '<div class="card"><p class="text-red-600">Erro ao carregar categorias</p></div>';
+        }
+      }
+
+      async function renderInstitutions() {
+        const main = document.getElementById('main-content');
+        main.innerHTML = '<div class="card"><p class="text-center text-slate-500">Carregando bancas...</p></div>';
+
+        try {
+          const res = await fetch(`/api/institutions?active=true`);
+          const data = await res.json();
+          const institutions = data.data || [];
+
+          let html = '<div class="card">';
+          html += '<div class="flex items-center justify-between mb-6">';
+          html += `<h2 class="text-xl font-semibold">Bancas de ${state.categoryName}</h2>`;
+          html += '</div>';
+          html += '<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">';
+
+          institutions.forEach(inst => {
+            const contestCount = inst.contest_count || 0;
+            const typeIcons = {
+              'exam_board': '🏛️',
+              'government': '🏛️',
+              'university': '🎓',
+              'other': '💼'
+            };
+            const icon = typeIcons[inst.type] || '🏛️';
+            
+            html += `
+              <div class="folder-card" onclick="navigateTo('contests', ${inst.id}, '${inst.name}')">
+                <div class="flex items-start justify-between">
+                  <div class="text-3xl">${icon}</div>
+                  <span class="pill bg-blue-50 text-blue-700 border-blue-200">${contestCount}</span>
+                </div>
+                <div class="font-semibold text-lg mt-2">${inst.name}</div>
+                ${inst.full_name && inst.full_name !== inst.name ? `<div class="text-xs text-slate-500 mt-1">${inst.full_name}</div>` : ''}
+                <div class="flex items-center gap-4 text-xs text-slate-400 mt-3">
+                  <span>🎯 ${contestCount} concursos</span>
+                </div>
+              </div>
+            `;
+          });
+
+          if (institutions.length === 0) {
+            html += '<div class="col-span-3 text-center text-slate-500 py-8">Nenhuma banca cadastrada nesta categoria</div>';
+          }
+
+          html += '</div></div>';
+          main.innerHTML = html;
+        } catch (err) {
+          console.error('Erro ao carregar bancas:', err);
+          main.innerHTML = '<div class="card"><p class="text-red-600">Erro ao carregar bancas</p></div>';
+        }
+      }
+
+      async function renderContests() {
+        const main = document.getElementById('main-content');
+        main.innerHTML = '<div class="card"><p class="text-center text-slate-500">Carregando concursos...</p></div>';
+
+        try {
+          const res = await fetch(`/api/contests?institution_id=${state.institutionId}`);
+          const data = await res.json();
+          const contests = data.contests || data;
+
+          let html = '<div class="card">';
+          html += '<div class="flex items-center justify-between mb-6">';
+          html += `<h2 class="text-xl font-semibold">Concursos da ${state.institutionName}</h2>`;
+          html += '<button onclick="addContest()" class="btn-primary btn-sm">+ Novo Concurso</button>';
+          html += '</div>';
+          html += '<div class="grid md:grid-cols-2 gap-4">';
+
+          contests.forEach(contest => {
+            const vagas = contest.vacancies ? `👥 ${contest.vacancies} vagas` : '';
+            const salario = contest.salary ? `💰 ${contest.salary}` : '';
+            const local = contest.location ? `📍 ${contest.location}` : '';
+            const nivel = contest.education_level ? `🎓 ${contest.education_level}` : '';
+            
+            const infos = [vagas, salario, local, nivel].filter(x => x).join(' • ');
+            
+            html += `
+              <div class="folder-card" onclick="navigateTo('editals', ${contest.id}, '${contest.title}')">
+                <div class="flex items-start justify-between">
+                  <div class="text-3xl">🎯</div>
+                  <span class="pill ${contest.status === 'active' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-700 border-gray-200'}">${contest.status}</span>
+                </div>
+                <div class="font-semibold text-lg mt-2">${contest.title}</div>
+                <div class="text-sm text-slate-500 mt-1">${contest.institution || ''}</div>
+                ${infos ? `<div class="text-xs text-slate-600 mt-2">${infos}</div>` : ''}
+                <div class="flex items-center gap-4 text-xs text-slate-400 mt-3">
+                  <span>📄 ${contest.editals_count || 0} editais</span>
+                  ${contest.exam_date ? `<span>📅 ${new Date(contest.exam_date).toLocaleDateString('pt-BR')}</span>` : ''}
+                </div>
+              </div>
+            `;
+          });
+
+          if (contests.length === 0) {
+            html += '<div class="col-span-2 text-center text-slate-500 py-8">Nenhum concurso cadastrado nesta categoria</div>';
+          }
+
+          html += '</div></div>';
+          main.innerHTML = html;
+        } catch (err) {
+          main.innerHTML = '<div class="card"><p class="text-red-600">Erro ao carregar concursos</p></div>';
+        }
+      }
+
+      async function renderEditals() {
+        const main = document.getElementById('main-content');
+        main.innerHTML = '<div class="card"><p class="text-center text-slate-500">Carregando editais...</p></div>';
+
+        try {
+          const res = await fetch(`/api/editals?contest_id=${state.contestId}`);
+          const data = await res.json();
+          const editals = data.editals || data;
+
+          let html = '<div class="card">';
+          html += '<div class="flex items-center justify-between mb-6">';
+          html += `<h2 class="text-xl font-semibold">Editais de ${state.contestName}</h2>`;
+          html += '<button onclick="addEdital()" class="btn-primary btn-sm">+ Novo Edital</button>';
+          html += '</div>';
+          html += '<div class="space-y-3">';
+
+          editals.forEach(edital => {
+            html += `
+              <div class="folder-card flex items-center justify-between" onclick="navigateTo('subjects', ${edital.id}, '${edital.title}')">
+                <div class="flex items-center gap-4">
+                  <div class="text-3xl">📄</div>
+                  <div>
+                    <div class="font-semibold">${edital.title}</div>
+                    <div class="text-sm text-slate-500">Nº ${edital.edital_number || 'N/A'}</div>
+                    <div class="text-xs text-slate-400 mt-1">
+                      📚 ${edital.subjects_count || 0} matérias • 
+                      📅 ${new Date(edital.created_at).toLocaleDateString('pt-BR')}
+                    </div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  ${edital.pdf_path ? '<button onclick="event.stopPropagation(); viewPDF(' + edital.id + ')" class="btn-secondary btn-sm">👁️ Ver PDF</button>' : ''}
+                  ${edital.pdf_path ? '<button onclick="event.stopPropagation(); downloadPDF(' + edital.id + ')" class="btn-secondary btn-sm">💾 Download</button>' : ''}
+                  <button onclick="event.stopPropagation(); uploadEdital(${edital.id})" class="btn-secondary btn-sm">📤 Upload</button>
+                </div>
+              </div>
+            `;
+          });
+
+          if (editals.length === 0) {
+            html += '<div class="text-center text-slate-500 py-8">Nenhum edital cadastrado neste concurso</div>';
+          }
+
+          html += '</div></div>';
+          main.innerHTML = html;
+        } catch (err) {
+          main.innerHTML = '<div class="card"><p class="text-red-600">Erro ao carregar editais</p></div>';
+        }
+      }
+
+      async function renderSubjects() {
+        const main = document.getElementById('main-content');
+        main.innerHTML = '<div class="card"><p class="text-center text-slate-500">Carregando matérias...</p></div>';
+
+        try {
+          const res = await fetch(`/api/subjects?edital_id=${state.editalId}`);
+          const data = await res.json();
+          const subjects = data.subjects || data;
+
+          let html = '<div class="card">';
+          html += '<div class="flex items-center justify-between mb-6">';
+          html += `<h2 class="text-xl font-semibold">Matérias do ${state.editalName}</h2>`;
+          html += '<button onclick="addSubject()" class="btn-primary btn-sm">+ Nova Matéria</button>';
+          html += '</div>';
+          html += '<div class="grid md:grid-cols-3 gap-4">';
+
+          subjects.forEach(subject => {
+            html += `
+              <div class="folder-card" onclick="navigateTo('topics', ${subject.id}, '${subject.name}')">
+                <div class="text-3xl mb-2">📚</div>
+                <div class="font-semibold">${subject.name}</div>
+                <div class="text-xs text-slate-400 mt-2">📝 ${subject.topics_count || 0} tópicos</div>
+              </div>
+            `;
+          });
+
+          if (subjects.length === 0) {
+            html += '<div class="col-span-3 text-center text-slate-500 py-8">Nenhuma matéria cadastrada neste edital</div>';
+          }
+
+          html += '</div></div>';
+          main.innerHTML = html;
+        } catch (err) {
+          main.innerHTML = '<div class="card"><p class="text-red-600">Erro ao carregar matérias</p></div>';
+        }
+      }
+
+      async function renderTopics() {
+        const main = document.getElementById('main-content');
+        main.innerHTML = '<div class="card"><p class="text-center text-slate-500">Carregando tópicos...</p></div>';
+
+        try {
+          const res = await fetch(`/api/topics?subject_id=${state.subjectId}`);
+          const data = await res.json();
+          const topics = data.topics || data;
+
+          let html = '<div class="card">';
+          html += '<div class="flex items-center justify-between mb-6">';
+          html += `<h2 class="text-xl font-semibold">Tópicos de ${state.subjectName}</h2>`;
+          html += '<button onclick="addTopic()" class="btn-primary btn-sm">+ Novo Tópico</button>';
+          html += '</div>';
+          html += '<div class="space-y-2">';
+
+          topics.forEach(topic => {
+            html += `
+              <div class="folder-card flex items-center justify-between" onclick="navigateTo('subtopics', ${topic.id}, '${topic.title}')">
+                <div class="flex items-center gap-3">
+                  <div class="text-2xl">📝</div>
+                  <div>
+                    <div class="font-semibold">${topic.title}</div>
+                    <div class="text-xs text-slate-400">🔹 ${topic.subtopics_count || 0} subtópicos</div>
+                  </div>
+                </div>
+              </div>
+            `;
+          });
+
+          if (topics.length === 0) {
+            html += '<div class="text-center text-slate-500 py-8">Nenhum tópico cadastrado nesta matéria</div>';
+          }
+
+          html += '</div></div>';
+          main.innerHTML = html;
+        } catch (err) {
+          main.innerHTML = '<div class="card"><p class="text-red-600">Erro ao carregar tópicos</p></div>';
+        }
+      }
+
+      async function renderSubtopics() {
+        const main = document.getElementById('main-content');
+        main.innerHTML = '<div class="card"><p class="text-center text-slate-500">Carregando subtópicos...</p></div>';
+
+        try {
+          const res = await fetch(`/api/subtopics?topic_id=${state.topicId}`);
+          const data = await res.json();
+          const subtopics = data.subtopics || data;
+
+          let html = '<div class="card">';
+          html += '<div class="flex items-center justify-between mb-6">';
+          html += `<h2 class="text-xl font-semibold">Subtópicos de ${state.topicName}</h2>`;
+          html += '<button onclick="addSubtopic()" class="btn-primary btn-sm">+ Novo Subtópico</button>';
+          html += '</div>';
+          html += '<div class="space-y-2">';
+
+          subtopics.forEach(subtopic => {
+            html += `
+              <div class="card">
+                <div class="flex items-center gap-3">
+                  <div class="text-xl">🔹</div>
+                  <div class="font-medium">${subtopic.title}</div>
+                </div>
+              </div>
+            `;
+          });
+
+          if (subtopics.length === 0) {
+            html += '<div class="text-center text-slate-500 py-8">Nenhum subtópico cadastrado neste tópico</div>';
+          }
+
+          html += '</div></div>';
+          main.innerHTML = html;
+        } catch (err) {
+          main.innerHTML = '<div class="card"><p class="text-red-600">Erro ao carregar subtópicos</p></div>';
+        }
+      }
+
+      // ========================================
+      // UTILITY TABS
+      // ========================================
+      function showUtilityTab(tab) {
+        document.getElementById('main-content').classList.add('hidden');
+        // Manter breadcrumb visível para acesso ao Início
+        document.getElementById('utility-panel').classList.remove('hidden');
+        
+        const title = document.getElementById('utility-title');
+        const content = document.getElementById('utility-content');
+
+        if (tab === 'institutions') {
+          title.textContent = '🏛️ Bancas Organizadoras';
+          loadInstitutions();
+        } else if (tab === 'harvester') {
+          title.textContent = '🤖 Harvester';
+          content.innerHTML = '<p class="text-slate-500">Conteúdo do Harvester (implementar)</p>';
+        } else if (tab === 'stats') {
+          title.textContent = '📊 Estatísticas';
+          content.innerHTML = '<p class="text-slate-500">Conteúdo de Estatísticas (implementar)</p>';
+        } else if (tab === 'costs') {
+          title.textContent = '💰 Custos';
+          loadCosts();
+        }
+      }
+
+      function hideUtilityPanel() {
+        document.getElementById('main-content').classList.remove('hidden');
+        // Breadcrumb já está visível
+        document.getElementById('utility-panel').classList.add('hidden');
+      }
+
+      async function loadCosts() {
+        const content = document.getElementById('utility-content');
+        content.innerHTML = '<p class="text-slate-500">Carregando custos...</p>';
+
+        try {
+          const res = await fetch('/api/costs/metrics');
+          const data = await res.json();
+
+          let html = '<div class="grid md:grid-cols-4 gap-4 mb-6">';
+          html += `<div class="card"><div class="text-sm text-slate-500">Custo Mensal Total</div><div class="text-2xl font-bold mono">R$ ${data.monthly.total.toFixed(2)}</div></div>`;
+          html += `<div class="card"><div class="text-sm text-slate-500">OpenAI API</div><div class="text-2xl font-bold mono">R$ ${(data.openai.estimatedCost * 5.5).toFixed(2)}</div></div>`;
+          html += `<div class="card"><div class="text-sm text-slate-500">Railway Hosting</div><div class="text-2xl font-bold mono">R$ ${data.railway.currentUsage.toFixed(2)}</div></div>`;
+          html += `<div class="card"><div class="text-sm text-slate-500">Armazenamento</div><div class="text-2xl font-bold mono">${(data.storage.database + data.storage.files).toFixed(1)} MB</div></div>`;
+          html += '</div>';
+
+          content.innerHTML = html;
+        } catch (err) {
+          content.innerHTML = '<p class="text-red-600">Erro ao carregar custos</p>';
+        }
+      }
+
+      // ========================================
+      // INSTITUTIONS (BANCAS)
+      // ========================================
+      async function loadInstitutions() {
+        const content = document.getElementById('utility-content');
+        content.innerHTML = '<p class="text-slate-500">Carregando bancas...</p>';
+
+        try {
+          const [listRes, statsRes] = await Promise.all([
+            fetch('/api/institutions'),
+            fetch('/api/institutions/stats')
+          ]);
+          
+          const listData = await listRes.json();
+          const statsData = await statsRes.json();
+          
+          const institutions = listData.data || [];
+          const stats = statsData.data?.stats || {};
+          const topInstitutions = statsData.data?.top_institutions || [];
+          
+          let html = `
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <div class="card">
+                <div class="text-sm text-slate-500">Total de Bancas</div>
+                <div class="text-2xl font-bold">${stats.total_institutions || 0}</div>
+              </div>
+              <div class="card">
+                <div class="text-sm text-slate-500">Bancas Ativas</div>
+                <div class="text-2xl font-bold text-green-600">${stats.active_institutions || 0}</div>
+              </div>
+              <div class="card">
+                <div class="text-sm text-slate-500">Bancas Examinadoras</div>
+                <div class="text-2xl font-bold text-blue-600">${stats.exam_boards || 0}</div>
+              </div>
+              <div class="card">
+                <div class="text-sm text-slate-500">Total de Concursos</div>
+                <div class="text-2xl font-bold text-purple-600">${stats.total_contests || 0}</div>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-semibold">Todas as Bancas</h3>
+              <button onclick="showAddInstitutionModal()" class="btn-primary btn-sm">➕ Nova Banca</button>
+            </div>
+
+            <!-- Institutions Table -->
+            <div class="card overflow-hidden p-0">
+              <table class="w-full">
+                <thead class="bg-slate-50 border-b">
+                  <tr>
+                    <th class="text-left p-4 text-sm font-medium text-slate-700">Nome</th>
+                    <th class="text-left p-4 text-sm font-medium text-slate-700">Tipo</th>
+                    <th class="text-left p-4 text-sm font-medium text-slate-700">Concursos</th>
+                    <th class="text-left p-4 text-sm font-medium text-slate-700">Último Concurso</th>
+                    <th class="text-left p-4 text-sm font-medium text-slate-700">Status</th>
+                    <th class="text-left p-4 text-sm font-medium text-slate-700">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+          `;
+          
+          if (institutions.length === 0) {
+            html += `
+              <tr>
+                <td colspan="6" class="p-8 text-center text-slate-500">
+                  Nenhuma banca cadastrada
+                </td>
+              </tr>
+            `;
+          } else {
+            institutions.forEach(inst => {
+              const typeLabels = {
+                'exam_board': '🏛️ Banca',
+                'government': '🏛️ Órgão Público',
+                'university': '🎓 Universidade',
+                'other': '💼 Outro'
+              };
+              
+              const typeLabel = typeLabels[inst.type] || inst.type;
+              const contestCount = inst.contest_count || 0;
+              const latestExam = inst.latest_exam_date 
+                ? new Date(inst.latest_exam_date).toLocaleDateString('pt-BR')
+                : '-';
+              const statusBadge = inst.is_active
+                ? '<span class="pill bg-green-50 text-green-700 border-green-200">● Ativa</span>'
+                : '<span class="pill bg-slate-50 text-slate-500 border-slate-200">Inativa</span>';
+              
+              html += `
+                <tr class="border-b hover:bg-slate-50">
+                  <td class="p-4">
+                    <div class="font-medium">${inst.name}</div>
+                    ${inst.full_name && inst.full_name !== inst.name ? `<div class="text-xs text-slate-500">${inst.full_name}</div>` : ''}
+                  </td>
+                  <td class="p-4 text-sm">${typeLabel}</td>
+                  <td class="p-4 text-sm">
+                    <span class="font-semibold">${contestCount}</span>
+                  </td>
+                  <td class="p-4 text-sm text-slate-600">${latestExam}</td>
+                  <td class="p-4">${statusBadge}</td>
+                  <td class="p-4">
+                    <div class="flex items-center gap-2">
+                      <button onclick="navigateTo('contests', ${inst.id}, '${inst.name.replace(/'/g, "\\'")}')
+state.institutionId = ${inst.id}; state.institutionName = '${inst.name.replace(/'/g, "\\'")}'; renderContent();" class="text-blue-600 hover:text-blue-800 text-sm">👁️ Ver Concursos</button>
+                      <button onclick="editInstitution(${inst.id})" class="text-slate-600 hover:text-slate-800 text-sm">✏️ Editar</button>
+                    </div>
+                  </td>
+                </tr>
+              `;
+            });
+          }
+          
+          html += `
+                </tbody>
+              </table>
+            </div>
+          `;
+          
+          content.innerHTML = html;
+        } catch (err) {
+          console.error('Erro ao carregar bancas:', err);
+          content.innerHTML = '<p class="text-red-600">Erro ao carregar bancas</p>';
+        }
+      }
+
+      function showAddInstitutionModal() {
+        const name = prompt('Nome da banca:');
+        if (!name) return;
+        
+        const fullName = prompt('Nome completo (opcional):') || name;
+        const website = prompt('Website (opcional):') || '';
+        const type = prompt('Tipo (exam_board/government/university/other):', 'exam_board');
+        
+        addInstitution({ name, full_name: fullName, website, type });
+      }
+
+      async function addInstitution(data) {
+        try {
+          const res = await fetch('/api/institutions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          
+          const result = await res.json();
+          
+          if (result.success) {
+            alert('✅ Banca adicionada com sucesso!');
+            loadInstitutions();
+          } else {
+            alert('❌ Erro: ' + result.error);
+          }
+        } catch (err) {
+          console.error('Erro ao adicionar banca:', err);
+          alert('❌ Erro ao adicionar banca');
+        }
+      }
+
+      async function viewInstitution(id) {
+        try {
+          const res = await fetch(`/api/institutions/${id}`);
+          const data = await res.json();
+          
+          if (data.success) {
+            const inst = data.data.institution;
+            const contests = data.data.contests;
+            
+            let info = `🏛️ ${inst.name}\n`;
+            info += `Nome completo: ${inst.full_name || '-'}\n`;
+            info += `Tipo: ${inst.type}\n`;
+            info += `Website: ${inst.website || '-'}\n`;
+            info += `Status: ${inst.is_active ? 'Ativa' : 'Inativa'}\n`;
+            info += `\nConcursos: ${inst.contest_count}\n`;
+            info += `Editais: ${inst.edital_count}\n`;
+            
+            if (contests.length > 0) {
+              info += `\nÚltimos concursos:\n`;
+              contests.slice(0, 5).forEach(c => {
+                info += `- ${c.title} (${c.exam_date ? new Date(c.exam_date).toLocaleDateString('pt-BR') : 'sem data'})\n`;
+              });
+            }
+            
+            alert(info);
+          }
+        } catch (err) {
+          console.error('Erro ao visualizar banca:', err);
+          alert('❌ Erro ao carregar detalhes da banca');
+        }
+      }
+
+      async function editInstitution(id) {
+        try {
+          const res = await fetch(`/api/institutions/${id}`);
+          const data = await res.json();
+          
+          if (!data.success) {
+            alert('❌ Erro ao carregar banca');
+            return;
+          }
+          
+          const inst = data.data.institution;
+          
+          const name = prompt('Nome:', inst.name);
+          if (!name) return;
+          
+          const fullName = prompt('Nome completo:', inst.full_name || inst.name);
+          const website = prompt('Website:', inst.website || '');
+          const isActive = confirm('Banca ativa?');
+          
+          const updateRes = await fetch(`/api/institutions/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name,
+              full_name: fullName,
+              website,
+              is_active: isActive
+            })
+          });
+          
+          const updateData = await updateRes.json();
+          
+          if (updateData.success) {
+            alert('✅ Banca atualizada com sucesso!');
+            loadInstitutions();
+          } else {
+            alert('❌ Erro: ' + updateData.error);
+          }
+        } catch (err) {
+          console.error('Erro ao editar banca:', err);
+          alert('❌ Erro ao editar banca');
+        }
+      }
+
+      // ========================================
+      // AÇÕES (PLACEHOLDERS)
+      // ========================================
+      function addCategory() { alert('Adicionar categoria (em desenvolvimento)'); }
+      function addContest() { alert('Adicionar concurso (em desenvolvimento)'); }
+      function addEdital() { alert('Adicionar edital (em desenvolvimento)'); }
+      function addSubject() { alert('Adicionar matéria (em desenvolvimento)'); }
+      function addTopic() { alert('Adicionar tópico (em desenvolvimento)'); }
+      function addSubtopic() { alert('Adicionar subtópico (em desenvolvimento)'); }
+      function uploadEdital(id) { alert('Upload de edital ' + id + ' (em desenvolvimento)'); }
+      
+      function viewPDF(editalId) {
+        window.open(`/api/pdf/edital/${editalId}`, '_blank');
+      }
+      
+      function downloadPDF(editalId) {
+        window.location.href = `/api/pdf/download/${editalId}`;
+      }
+
+      // ========================================
+      // INICIALIZAÇÃO
+      // ========================================
+      document.addEventListener('DOMContentLoaded', () => {
+        navigateTo('categories');
+      });
+    </script>
+  </body>
+</html>
