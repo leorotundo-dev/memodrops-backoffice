@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DATABASE_URL - MemoDrops</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .instruction {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196F3;
+        }
+        .code-box {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 14px;
+            word-break: break-all;
+            margin: 20px 0;
+            border: 2px solid #ddd;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:active {
+            background: #45a049;
+        }
+        .success {
+            background: #4CAF50;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            display: none;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Configurar DATABASE_URL</h1>
+        
+        <div class="instruction">
+            <strong>Instruções:</strong>
+            <ol>
+                <li>Clique no botão "COPIAR" abaixo</li>
+                <li>Acesse railway.app</li>
+                <li>Entre no projeto "memodrops-backoffice"</li>
+                <li>Clique em "Variables"</li>
+                <li>Adicione nova variável:
+                    <ul>
+                        <li><strong>Nome:</strong> DATABASE_URL</li>
+                        <li><strong>Valor:</strong> Cole o texto copiado</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <h3>Valor da DATABASE_URL:</h3>
+        <div class="code-box" id="dbUrl">postgresql://postgres:XJIZmpDaUUZFQzDhGQSSaxjUmVlGTCth@nozomi.proxy.rlwy.net:51514/railway</div>
+        
+        <button onclick="copyToClipboard()">📋 COPIAR DATABASE_URL</button>
+        <div class="success" id="success">✅ Copiado com sucesso!</div>
+    </div>
+
+    <script>
+        function copyToClipboard() {
+            const text = document.getElementById('dbUrl').textContent;
+            
+            // Método 1: Clipboard API (moderno)
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showSuccess();
+                }).catch(() => {
+                    fallbackCopy(text);
+                });
+            } else {
+                fallbackCopy(text);
+            }
+        }
+
+        function fallbackCopy(text) {
+            // Método 2: Fallback para navegadores antigos
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                document.execCommand('copy');
+                showSuccess();
+            } catch (err) {
+                alert('Erro ao copiar. Por favor, copie manualmente o texto acima.');
+            }
+            
+            document.body.removeChild(textarea);
+        }
+
+        function showSuccess() {
+            const success = document.getElementById('success');
+            success.style.display = 'block';
+            setTimeout(() => {
+                success.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
