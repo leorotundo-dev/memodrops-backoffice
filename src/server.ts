@@ -34,7 +34,7 @@ import adminMigrationsRouter from './routes/admin-migrations.js';
 
 // Criar diretório para uploads se não existir
 // Usar /data/uploads para persistência via Railway Volume
-const uploadsDir = process.env.UPLOAD_DIR || '/data/uploads';
+const uploadsDir = process.env.UPLOAD_DIR || (process.env.NODE_ENV === 'production' ? '/data/uploads' : './uploads');
 
 // Iniciar job de limpeza automática
 if (process.env.NODE_ENV === 'production') {
