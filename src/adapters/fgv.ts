@@ -11,8 +11,8 @@
 
 import * as cheerio from 'cheerio';
 import { fetchHTML } from './fetch.js';
-import { withErrorHandling, fetchWithRetry } from '../utils/errorHandler.js';
-import { logger } from '../utils/logger.js';
+import { withErrorHandling, fetchWithRetry } from '../utils/errorHandler';
+import { logger } from '../utils/logger';
 
 export interface HarvestItem {
   url: string;
