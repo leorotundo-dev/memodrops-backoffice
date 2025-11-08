@@ -273,4 +273,193 @@ router.get('/api/drops/stats', async (req, res) => {
   }
 });
 
+/**
+ * Endpoint para gerar drops baseado em uma matéria de um edital
+ * POST /api/drops/generate
+ * Body: { editalId: number, subjectName: string, topicLimit?: number }
+ */
+router.post('/api/drops/generate', async (req, res) => {
+  try {
+    const { editalId, subjectName, topicLimit = 5 } = req.body;
+
+    if (!editalId || !subjectName) {
+      return res.status(400).json({
+        success: false,
+        error: 'editalId e subjectName são obrigatórios'
+      });
+    }
+
+    // Buscar edital com conteúdo
+    const editalResult = await query(`
+      SELECT id, title, content_text, subjects_data
+      FROM editals
+      WHERE id = $1
+    `, [editalId]);
+
+    if (editalResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Edital não encontrado'
+      });
+    }
+
+    const edital = editalResult.rows[0];
+
+    if (!edital.content_text) {
+      return res.status(400).json({
+        success: false,
+        error: 'Edital não possui conteúdo extraído'
+      });
+    }
+
+    // Usar LLM para gerar drops
+    const OpenAI = (await import('openai')).default;
+    const openai = new OpenAI();
+
+    const prompt = `Você é um especialista em educação e criação de conteúdo didático para concursos públicos.
+
+Analise o seguinte conteúdo de um edital e gere ${topicLimit} "drops" (pílulas de conhecimento) sobre a matéria "${subjectName}".
+
+Cada drop deve:
+1. Ter um título claro e objetivo
+2. Conter um conteúdo didático de 200-300 palavras
+3. Incluir uma técnica de memorização (mnemônico, mapa mental OU flashcard)
+4. Ter dificuldade (easy, medium, hard)
+5. Tempo estimado de estudo (5-15 minutos)
+
+Conteúdo do edital:
+${edital.content_text.substring(0, 3000)}
+
+Retorne um JSON array com este formato:
+[
+  {
+    "title": "Título do drop",
+    "content": "Conteúdo didático detalhado",
+    "mnemonic": "Técnica mnemônica" ou null,
+    "mindmap": "Estrutura de mapa mental" ou null,
+    "flashcard": { "front": "Pergunta", "back": "Resposta" } ou null,
+    "difficulty": "easy" | "medium" | "hard",
+    "estimated_minutes": 5-15,
+    "topic_name": "Nome do tópico específico"
+  }
+]`;
+
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4.1-mini',
+      messages: [
+        { role: 'system', content: 'Você é um especialista em educação para concursos públicos.' },
+        { role: 'user', content: prompt }
+      ],
+      response_format: { type: 'json_object' },
+      temperature: 0.7
+    });
+
+    const responseText = completion.choices[0].message.content;
+    let dropsData;
+    
+    try {
+      const parsed = JSON.parse(responseText);
+      dropsData = parsed.drops || parsed.data || (Array.isArray(parsed) ? parsed : [parsed]);
+    } catch (err) {
+      console.error('Erro ao parsear resposta do LLM:', responseText);
+      return res.status(500).json({
+        success: false,
+        error: 'Erro ao processar resposta do LLM'
+      });
+    }
+
+    // Salvar drops no banco
+    const savedDrops = [];
+    
+    for (const drop of dropsData) {
+      // Criar ou buscar tópico
+      const topicResult = await query(`
+        INSERT INTO topics (name, subject_id, created_at, updated_at)
+        SELECT $1, s.id, NOW(), NOW()
+        FROM subjects s
+        INNER JOIN editals e ON s.edital_id = e.id
+        WHERE e.id = $2
+        AND LOWER(s.name) = LOWER($3)
+        ON CONFLICT (name, subject_id) DO UPDATE SET updated_at = NOW()
+        RETURNING id
+      `, [drop.topic_name || 'Geral', editalId, subjectName]);
+
+      let topicId;
+      if (topicResult.rows.length > 0) {
+        topicId = topicResult.rows[0].id;
+      } else {
+        // Buscar tópico existente
+        const existingTopic = await query(`
+          SELECT t.id
+          FROM topics t
+          INNER JOIN subjects s ON t.subject_id = s.id
+          INNER JOIN editals e ON s.edital_id = e.id
+          WHERE e.id = $1
+          AND LOWER(s.name) = LOWER($2)
+          AND LOWER(t.name) = LOWER($3)
+        `, [editalId, subjectName, drop.topic_name || 'Geral']);
+        
+        if (existingTopic.rows.length > 0) {
+          topicId = existingTopic.rows[0].id;
+        } else {
+          continue; // Skip se não conseguir criar/encontrar tópico
+        }
+      }
+
+      // Criar knowledge pill
+      const pillResult = await query(`
+        INSERT INTO knowledgePills (
+          topic_id,
+          title,
+          content,
+          mnemonic,
+          mindmap,
+          flashcard,
+          difficulty,
+          estimated_minutes,
+          quality_score,
+          needs_review,
+          created_at,
+          updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+        RETURNING id
+      `, [
+        topicId,
+        drop.title,
+        drop.content,
+        drop.mnemonic,
+        drop.mindmap,
+        drop.flashcard ? JSON.stringify(drop.flashcard) : null,
+        drop.difficulty || 'medium',
+        drop.estimated_minutes || 10,
+        0.8, // quality_score inicial
+        false // needs_review
+      ]);
+
+      savedDrops.push({
+        id: pillResult.rows[0].id,
+        ...drop
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `${savedDrops.length} drops gerados com sucesso`,
+      data: {
+        editalId,
+        editalTitle: edital.title,
+        subjectName,
+        dropsGenerated: savedDrops.length,
+        drops: savedDrops
+      }
+    });
+  } catch (error) {
+    console.error('[Drops] Erro ao gerar drops:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Erro ao gerar drops: ' + error.message
+    });
+  }
+});
+
 export default router;
