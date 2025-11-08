@@ -8,6 +8,12 @@ console.log('[Minimal Server] Iniciando...');
 
 app.use(express.json());
 
+// Health check para Railway (sem /api)
+app.get('/health', (req, res) => {
+  console.log('[Health] Railway health check');
+  res.json({ status: 'ok' });
+});
+
 // Ping endpoint
 app.get('/api/ping', (req, res) => {
   console.log('[Ping] Request received');
