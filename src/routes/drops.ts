@@ -318,31 +318,34 @@ router.post('/api/drops/generate', async (req, res) => {
 
     const prompt = `Você é um especialista em educação e criação de conteúdo didático para concursos públicos.
 
-Analise o seguinte conteúdo de um edital e gere ${topicLimit} "drops" (pílulas de conhecimento) sobre a matéria "${subjectName}".
+Gere EXATAMENTE ${topicLimit} "drops" (pílulas de conhecimento) sobre a matéria "${subjectName}" baseado no conteúdo abaixo.
 
-Cada drop deve:
-1. Ter um título claro e objetivo
-2. Conter um conteúdo didático de 200-300 palavras
-3. Incluir uma técnica de memorização (mnemônico, mapa mental OU flashcard)
-4. Ter dificuldade (easy, medium, hard)
-5. Tempo estimado de estudo (5-15 minutos)
+Cada drop deve ter:
+- Título claro e objetivo
+- Conteúdo didático de 200-300 palavras
+- Uma técnica de memorização (mnemônico OU flashcard)
+- Dificuldade: "easy", "medium" ou "hard"
+- Tempo estimado: 5 a 15 minutos
+- Nome do tópico específico
 
 Conteúdo do edital:
 ${edital.content_text.substring(0, 3000)}
 
-Retorne um JSON array com este formato:
-[
-  {
-    "title": "Título do drop",
-    "content": "Conteúdo didático detalhado",
-    "mnemonic": "Técnica mnemônica" ou null,
-    "mindmap": "Estrutura de mapa mental" ou null,
-    "flashcard": { "front": "Pergunta", "back": "Resposta" } ou null,
-    "difficulty": "easy" | "medium" | "hard",
-    "estimated_minutes": 5-15,
-    "topic_name": "Nome do tópico específico"
-  }
-]`;
+RETORNE APENAS UM JSON com este formato EXATO (sem texto adicional):
+{
+  "drops": [
+    {
+      "title": "Título do drop",
+      "content": "Conteúdo didático detalhado",
+      "mnemonic": "Técnica mnemônica",
+      "mindmap": null,
+      "flashcard": null,
+      "difficulty": "medium",
+      "estimated_minutes": 10,
+      "topic_name": "Nome do tópico"
+    }
+  ]
+}`;
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4.1-mini',
@@ -355,16 +358,28 @@ Retorne um JSON array com este formato:
     });
 
     const responseText = completion.choices[0].message.content;
+    console.log('[Drops] Resposta do LLM:', responseText.substring(0, 500));
+    
     let dropsData;
     
     try {
       const parsed = JSON.parse(responseText);
       dropsData = parsed.drops || parsed.data || (Array.isArray(parsed) ? parsed : [parsed]);
+      console.log('[Drops] Drops parseados:', dropsData.length);
     } catch (err) {
-      console.error('Erro ao parsear resposta do LLM:', responseText);
+      console.error('[Drops] Erro ao parsear resposta do LLM:', responseText);
       return res.status(500).json({
         success: false,
-        error: 'Erro ao processar resposta do LLM'
+        error: 'Erro ao processar resposta do LLM',
+        debug: responseText.substring(0, 500)
+      });
+    }
+    
+    if (!Array.isArray(dropsData) || dropsData.length === 0) {
+      return res.status(500).json({
+        success: false,
+        error: 'LLM não retornou drops válidos',
+        debug: { parsed: dropsData, raw: responseText.substring(0, 500) }
       });
     }
 
