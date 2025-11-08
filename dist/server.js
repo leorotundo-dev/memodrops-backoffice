@@ -21,6 +21,7 @@ import errorsRouter from './routes/errors.js';
 import processV2Router from './routes/process-v2.js';
 import testV2Router from './routes/test-v2.js';
 import processV3Router from './routes/process-v3.js';
+import healthRouter from './routes/health.js';
 import personalizationRouter from './routes/personalization.js';
 import qaRouter from './routes/qa.js';
 import pedagogyRouter from './routes/pedagogy.js';
@@ -54,10 +55,8 @@ app.use(express.json());
 // Serve static files from public directory
 const publicPath = process.env.NODE_ENV === 'production' ? 'dist/public' : 'public';
 app.use(express.static(publicPath));
-// Health check
-app.get('/health', (req, res) => {
-    res.json({ status: 'ok', service: 'memodrops-backoffice' });
-});
+// Health check (detailed)
+app.use(healthRouter);
 // Dashboard route - serve index.html for /dashboard and /dashboard/
 app.get(['/dashboard', '/dashboard/'], (req, res) => {
     const dashboardPath = process.env.NODE_ENV === 'production'
