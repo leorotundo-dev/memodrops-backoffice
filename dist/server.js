@@ -1,6 +1,10 @@
 // src/server.ts
 import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import fs from 'fs';
+import logger from './utils/logger.js';
 import { runAll } from './jobs/harvest.js';
 import { processHarvestItems } from './jobs/process-content.js';
 import { runCleanup } from './jobs/cleanup-files.js';
@@ -57,6 +61,27 @@ catch (err) {
 }
 const app = express();
 const PORT = process.env.PORT || 3001;
+// Segurança: CORS
+const corsOptions = {
+    origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
+    credentials: true,
+    optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+// Segurança: Helmet (headers de segurança)
+app.use(helmet({
+    contentSecurityPolicy: false, // Desabilitar CSP para permitir dashboard
+    crossOriginEmbedderPolicy: false
+}));
+// Segurança: Rate Limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 100, // Limite de 100 requisições por IP
+    message: 'Muitas requisições deste IP, tente novamente em 15 minutos',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+app.use('/api/', limiter);
 app.use(express.json());
 // Ping endpoint PRIMEIRO - sem dependências
 // Health check para Railway (sem /api)
@@ -414,16 +439,16 @@ app.get('/discover/sources', async (req, res) => {
 // START SERVER
 // ============================================================================
 app.listen(PORT, async () => {
-    console.log('========================================');
-    console.log('🚀 MemoDrops Backoffice');
-    console.log('========================================');
-    console.log(`Server: http://localhost:${PORT}`);
-    console.log(`Health: http://localhost:${PORT}/health`);
-    console.log('========================================');
+    logger.info('========================================');
+    logger.info('🚀 MemoDrops Backoffice');
+    logger.info('========================================');
+    logger.info(`Server: http://localhost:${PORT}`);
+    logger.info(`Health: http://localhost:${PORT}/health`);
+    logger.info('========================================');
     // Auto-setup database on first run
     await autoSetupDatabase();
     // Inicializar scheduler interno
-    console.log('\n📅 Inicializando scheduler...');
+    logger.info('\n📅 Inicializando scheduler...');
     await import('./scheduler.js');
     // Executar coleta inicial após 10 segundos
     setTimeout(async () => {

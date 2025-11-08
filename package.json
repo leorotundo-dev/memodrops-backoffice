@@ -15,13 +15,16 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
     "multer": "^2.0.2",
     "node-cron": "^3.0.3",
     "node-fetch": "^3.3.2",
     "openai": "^4.52.0",
     "pdf-lib": "^1.17.1",
     "pg": "^8.11.3",
-    "undici": "^7.16.0"
+    "undici": "^7.16.0",
+    "winston": "^3.18.3"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
