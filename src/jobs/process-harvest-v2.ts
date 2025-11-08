@@ -74,7 +74,7 @@ export async function processHarvestItemsV2(): Promise<{
         // 3. FAZER PARSE DAS SEÇÕES
         console.log(`[Pipeline V2] [3/6] Fazendo parse das seções...`);
         const parsed = parseEdital(content.full_text, content.sections);
-        console.log(`[Pipeline V2] ✅ Datas encontradas: ${parsed.dates.length}`);
+        console.log(`[Pipeline V2] ✅ Datas: ${Object.keys(parsed.dates).length} campos`);
         console.log(`[Pipeline V2] ✅ Vagas encontradas: ${parsed.vacancies.length}`);
         
         // 4. EXTRAIR MATÉRIAS (CRÍTICO!)
@@ -110,7 +110,7 @@ export async function processHarvestItemsV2(): Promise<{
         
         console.log(`[Pipeline V2] ✅ Confiança geral: ${(verification.overall_confidence * 100).toFixed(1)}%`);
         console.log(`[Pipeline V2] ✅ Problemas encontrados: ${verification.issues_found}`);
-        if (verification.needs_review) {
+        if (verification.needs_manual_review) {
           console.log(`[Pipeline V2] ⚠️  Marcado para revisão manual`);
         }
         
@@ -214,7 +214,7 @@ export async function processHarvestItemsV2(): Promise<{
         }
         
         console.log(`[Pipeline V2] ✅ Item processado com sucesso!`);
-        console.log(`[Pipeline V2] ✅ Total de vínculos criados: ${result.materias_extracted}`);    }
+        console.log(`[Pipeline V2] ✅ Total de vínculos criados: ${result.materias_extracted}`);
         
         // 9. MARCAR ITEM COMO PROCESSADO
         await pool.query(`
