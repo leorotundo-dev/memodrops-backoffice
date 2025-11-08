@@ -16,7 +16,7 @@ export interface ParsedEdital {
     cargo: string;
     quantity: number;
     type: 'efetivo' | 'temporario' | 'cadastro_reserva';
-    salary?: string;
+    salary?: number;
     education_level?: string;
     requirements?: string[];
   }[];
@@ -103,7 +103,13 @@ function parseVacancies(text: string): ParsedEdital['vacancies'] {
       
       // Tentar extrair salário
       const salaryMatch = line.match(/R\$\s*([\d.,]+)/);
-      const salary = salaryMatch ? `R$ ${salaryMatch[1]}` : undefined;
+      let salary: number | undefined;
+      if (salaryMatch) {
+        // Converter "R$ 9.739,10" ou "R$ 9739,10" para número
+        const salaryStr = salaryMatch[1].replace(/\./g, '').replace(',', '.');
+        salary = parseFloat(salaryStr);
+        if (isNaN(salary)) salary = undefined;
+      }
       
       // Tentar extrair escolaridade
       let education_level: string | undefined;

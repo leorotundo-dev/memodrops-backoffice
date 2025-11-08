@@ -121,17 +121,27 @@ export async function processHarvestItemsV2(): Promise<{
         let institutionId = await getOrCreateInstitution(banca);
         console.log(`[Pipeline V2] Institution ID: ${institutionId}`);
         
+        // Gerar slug único
+        const slug = item.title.toLowerCase()
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove acentos
+          .replace(/[^a-z0-9\s-]/g, '') // Remove caracteres especiais
+          .replace(/\s+/g, '-') // Substitui espaços por hífens
+          .substring(0, 200); // Limita tamanho
+        
         const contestResult = await pool.query(`
           INSERT INTO contests (
-            title, institution_id, institution, category_id,
+            title, slug, institution_id, institution, category_id,
             vacancies, salary, location, education_level,
             status, source_url, meta, created_at
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())
-          ON CONFLICT (source_url) DO UPDATE SET
-            updated_at = NOW()
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
+          ON CONFLICT (slug) DO UPDATE SET
+            updated_at = NOW(),
+            vacancies = EXCLUDED.vacancies,
+            salary = EXCLUDED.salary
           RETURNING id
         `, [
           item.title,
+          slug,
           institutionId,
           banca,
           1, // categoria padrão
