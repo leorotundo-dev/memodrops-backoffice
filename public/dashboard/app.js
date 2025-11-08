@@ -321,16 +321,17 @@ async function renderDrops() {
   content.innerHTML = '<div class="text-center text-slate-500 py-8">Carregando...</div>';
   
   try {
-    // Buscar estatísticas de drops (usar dados mockados se API não existir)
-    let stats = { total: 0, approved: 0, needsReview: 0, rejected: 0 };
+    // Buscar estatísticas de drops
+    let stats = { total: '-', approved: '-', needsReview: '-', rejected: '-' };
     
     try {
       const statsRes = await fetch('/api/drops/stats');
       if (statsRes.ok) {
-        stats = await statsRes.json();
+        const data = await statsRes.json();
+        stats = data;
       }
     } catch (err) {
-      console.log('API drops/stats não disponível, usando dados mockados');
+      console.log('API drops/stats não disponível');
     }
     
     content.innerHTML = `
@@ -486,11 +487,12 @@ async function renderUsers() {
   
   try {
     // Buscar estatísticas de usuários
-    let stats = { totalUsers: 0, activePlans: 0, dropsToday: 0, gaps: 0 };
+    let stats = { totalUsers: '-', activePlans: '-', dropsToday: '-', gaps: '-' };
     try {
       const statsRes = await fetch('/api/personalization/stats');
       if (statsRes.ok) {
-        stats = await statsRes.json();
+        const data = await statsRes.json();
+        stats = data;
       }
     } catch (err) {
       console.log('API personalization/stats não disponível');
@@ -585,11 +587,12 @@ async function renderPedagogy() {
   
   try {
     // Buscar estatísticas pedagógicas
-    let stats = { prerequisites: 0, weakTopics: 0, examLogs: 0 };
+    let stats = { prerequisites: '-', weakTopics: '-', examLogs: '-' };
     try {
       const statsRes = await fetch('/api/pedagogy/stats');
       if (statsRes.ok) {
-        stats = await statsRes.json();
+        const data = await statsRes.json();
+        stats = data;
       }
     } catch (err) {
       console.log('API pedagogy/stats não disponível');
@@ -644,11 +647,12 @@ async function renderRAG() {
   
   try {
     // Buscar estatísticas de RAG
-    let stats = { totalBlocks: 0, embeddings: 0, avgQuality: 0 };
+    let stats = { totalBlocks: '-', embeddings: '-', avgQuality: '-' };
     try {
       const statsRes = await fetch('/api/rag/stats');
       if (statsRes.ok) {
-        stats = await statsRes.json();
+        const data = await statsRes.json();
+        stats = data;
       }
     } catch (err) {
       console.log('API rag/stats não disponível');
