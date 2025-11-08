@@ -24,7 +24,8 @@ router.post('/admin/migrations/run', async (req, res) => {
       '006_create_qa_tables.sql',
       '007_create_rag_blocks.sql',
       '008_create_user_tables.sql',
-      '009_create_pedagogy_tables.sql'
+      '009_create_pedagogy_tables.sql',
+      '010_add_pdf_url_to_editals.sql'
     ];
 
     const results = [];
