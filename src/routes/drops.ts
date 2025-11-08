@@ -428,34 +428,62 @@ RETORNE APENAS UM JSON com este formato EXATO (sem texto adicional):
         }
       }
 
-      // Criar knowledge pill
+      // Buscar subject_id
+      const subjectResult = await query(`
+        SELECT s.id
+        FROM subjects s
+        INNER JOIN editals e ON s.edital_id = e.id
+        WHERE e.id = $1
+        AND LOWER(s.name) = LOWER($2)
+      `, [editalId, subjectName]);
+      
+      if (subjectResult.rows.length === 0) {
+        console.log('Subject não encontrado para:', subjectName);
+        continue;
+      }
+      
+      const subjectId = subjectResult.rows[0].id;
+      
+      // Criar drop
+      const metadata = {
+        title: drop.title,
+        topic: drop.topic_name,
+        mnemonic: drop.mnemonic,
+        mindmap: drop.mindmap,
+        flashcard: drop.flashcard,
+        difficulty: drop.difficulty || 'medium'
+      };
+      
+      const pedagogy_metadata = {
+        estimated_minutes: drop.estimated_minutes || 10,
+        cognitive_level: drop.difficulty || 'medium',
+        topic_id: topicId
+      };
+      
       const pillResult = await query(`
-        INSERT INTO "knowledgePills" (
-          topic_id,
-          title,
-          content,
-          mnemonic,
-          mindmap,
-          flashcard,
-          difficulty,
-          estimated_minutes,
-          quality_score,
-          needs_review,
-          created_at,
-          updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+        INSERT INTO drops (
+          blueprint_id,
+          subject_id,
+          drop_text,
+          drop_type,
+          model,
+          prompt_version,
+          metadata,
+          pedagogy_metadata,
+          estimated_time_seconds,
+          created_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
         RETURNING id
       `, [
-        topicId,
-        drop.title,
+        editalId, // blueprint_id
+        subjectId,
         drop.content,
-        drop.mnemonic,
-        drop.mindmap,
-        drop.flashcard ? JSON.stringify(drop.flashcard) : null,
-        drop.difficulty || 'medium',
-        drop.estimated_minutes || 10,
-        0.8, // quality_score inicial
-        false // needs_review
+        'knowledge_pill',
+        'gpt-4.1-mini',
+        'v1.0',
+        JSON.stringify(metadata),
+        JSON.stringify(pedagogy_metadata),
+        (drop.estimated_minutes || 10) * 60 // converter para segundos
       ]);
 
       savedDrops.push({
