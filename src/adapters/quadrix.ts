@@ -50,7 +50,9 @@ export async function harvestQuadrix(): Promise<HarvestItem[]> {
             const link = $card.find('a').attr('href');
 
             if (title && link) {
-              const fullUrl = link.startsWith('http') ? link : `${baseUrl}${link}`;
+              // Garantir que há uma barra entre baseUrl e link
+              const separator = link.startsWith('/') ? '' : '/';
+              const fullUrl = link.startsWith('http') ? link : `${baseUrl}${separator}${link}`;
               
               if (!items.find(item => item.url === fullUrl)) {
                 items.push({
@@ -76,7 +78,9 @@ export async function harvestQuadrix(): Promise<HarvestItem[]> {
           const title = $(el).text().trim();
           
           if (href && title && title.length > 10) {
-            const fullUrl = href.startsWith('http') ? href : `${baseUrl}${href}`;
+            // Garantir que há uma barra entre baseUrl e href
+            const separator = href.startsWith('/') ? '' : '/';
+            const fullUrl = href.startsWith('http') ? href : `${baseUrl}${separator}${href}`;
             
             if (!items.find(item => item.url === fullUrl)) {
               items.push({
@@ -103,7 +107,9 @@ export async function harvestQuadrix(): Promise<HarvestItem[]> {
             title.toLowerCase().includes('prova') ||
             title.toLowerCase().includes('retificação')
           )) {
-            const fullUrl = href.startsWith('http') ? href : `${baseUrl}${href}`;
+            // Garantir que há uma barra entre baseUrl e href
+            const separator = href.startsWith('/') ? '' : '/';
+            const fullUrl = href.startsWith('http') ? href : `${baseUrl}${separator}${href}`;
             
             if (!items.find(item => item.url === fullUrl)) {
               items.push({
