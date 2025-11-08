@@ -11,6 +11,8 @@
 
 import * as cheerio from 'cheerio';
 import { fetchHTML } from './fetch.js';
+import { withErrorHandling, fetchWithRetry } from '../utils/errorHandler';
+import { logger } from '../utils/logger';
 
 export interface HarvestItem {
   url: string;
@@ -23,8 +25,9 @@ export interface HarvestItem {
  * Coleta concursos da FGV
  */
 export async function harvestFGV(): Promise<HarvestItem[]> {
-  console.log('[FGV] Iniciando coleta...');
-  const items: HarvestItem[] = [];
+  return withErrorHandling(async () => {
+    logger.info('[FGV] Iniciando coleta...');
+    const items: HarvestItem[] = [];
   
   try {
     const listingUrls = [
@@ -110,10 +113,11 @@ export async function harvestFGV(): Promise<HarvestItem[]> {
       }
     }
     
-    console.log(`[FGV] Coletados ${items.length} itens`);
+    logger.info(`[FGV] Coletados ${items.length} itens`);
     return items;
   } catch (error: any) {
-    console.error('[FGV] Erro geral na coleta:', error.message);
+    logger.error('[FGV] Erro geral na coleta:', error);
     return items;
   }
+  }, { adapter: 'FGV', operation: 'harvest' });
 }

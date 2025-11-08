@@ -6,6 +6,7 @@ import rateLimit from 'express-rate-limit';
 import cron from 'node-cron';
 import fs from 'fs';
 import logger from './utils/logger.js';
+import { globalErrorHandler } from './utils/errorHandler.js';
 import { runAll } from './jobs/harvest.js';
 import { processHarvestItems } from './jobs/process-content.js';
 import { runCleanup } from './jobs/cleanup-files.js';
@@ -330,6 +331,9 @@ app.post('/admin/seed', async (req, res) => {
     res.status(500).json({ error: 'Failed to seed database', details: error instanceof Error ? error.message : String(error) });
   }
 });
+
+// Error handler global (deve ser o último middleware)
+app.use(globalErrorHandler);
 
 // ============================================================================
 // HARVESTER ADMIN ENDPOINTS

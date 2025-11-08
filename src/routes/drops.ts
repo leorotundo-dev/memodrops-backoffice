@@ -1,6 +1,7 @@
 // src/routes/drops.ts
 import { Router } from 'express';
-import { query } from '../db/index.js';
+import { query } from '../db';
+import { validateBody, GenerateDropsSchema } from '../utils/validation';
 
 const router = Router();
 
@@ -278,16 +279,9 @@ router.get('/api/drops/stats', async (req, res) => {
  * POST /api/drops/generate
  * Body: { editalId: number, subjectName: string, topicLimit?: number }
  */
-router.post('/api/drops/generate', async (req, res) => {
+router.post('/api/drops/generate', validateBody(GenerateDropsSchema), async (req, res) => {
   try {
-    const { editalId, subjectName, topicLimit = 5 } = req.body;
-
-    if (!editalId || !subjectName) {
-      return res.status(400).json({
-        success: false,
-        error: 'editalId e subjectName são obrigatórios'
-      });
-    }
+    const { editalId, subjectName, topicLimit } = req.body;
 
     // Buscar edital com conteúdo
     const editalResult = await query(`
