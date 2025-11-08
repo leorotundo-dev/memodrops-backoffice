@@ -2,6 +2,7 @@ import { Pool } from 'pg';
 
 export interface User {
   id: number;
+  openId: string;
   email: string;
   name: string | null;
   avatar_url: string | null;
@@ -32,13 +33,16 @@ export class UserRepository {
   async create(params: CreateUserParams): Promise<User> {
     const { email, name, avatarUrl, preferences } = params;
 
+    const openId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
     const query = `
-      INSERT INTO users (email, name, avatar_url, preferences)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO users ("openId", email, name, avatar_url, preferences)
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING *
     `;
 
     const values = [
+      openId,
       email,
       name || null,
       avatarUrl || null,
