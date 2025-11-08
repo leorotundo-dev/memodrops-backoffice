@@ -430,7 +430,7 @@ RETORNE APENAS UM JSON com este formato EXATO (sem texto adicional):
 
       // Criar knowledge pill
       const pillResult = await query(`
-        INSERT INTO knowledgePills (
+        INSERT INTO "knowledgePills" (
           topic_id,
           title,
           content,
