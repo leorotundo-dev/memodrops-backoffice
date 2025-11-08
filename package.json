@@ -2,11 +2,11 @@
   "name": "memodrops-backoffice",
   "version": "1.0.0",
   "description": "MemoDrops Backoffice - Sistema de coleta e processamento de editais",
-  "main": "dist/server-minimal.js",
+  "main": "dist/server.js",
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.json && mkdir -p dist/db && cp src/db/schema.sql dist/db/ && mkdir -p dist/db/migrations && cp src/db/migrations/*.sql dist/db/migrations/ 2>/dev/null || true && cp -r public dist/",
-    "start": "node dist/server-minimal.js",
+    "start": "node dist/server.js",
     "dev": "tsx src/server.ts"
   },
   "dependencies": {
