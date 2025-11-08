@@ -374,13 +374,13 @@ Retorne um JSON array com este formato:
     for (const drop of dropsData) {
       // Criar ou buscar tópico
       const topicResult = await query(`
-        INSERT INTO topics (name, subject_id, created_at, updated_at)
-        SELECT $1, s.id, NOW(), NOW()
+        INSERT INTO topics (name, subject_id, created_at)
+        SELECT $1, s.id, NOW()
         FROM subjects s
         INNER JOIN editals e ON s.edital_id = e.id
         WHERE e.id = $2
         AND LOWER(s.name) = LOWER($3)
-        ON CONFLICT (name, subject_id) DO UPDATE SET updated_at = NOW()
+        ON CONFLICT (name, subject_id) DO NOTHING
         RETURNING id
       `, [drop.topic_name || 'Geral', editalId, subjectName]);
 
