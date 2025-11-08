@@ -133,3 +133,24 @@ router.get('/admin/migrations/status', async (req, res) => {
 });
 
 export default router;
+
+/**
+ * POST /admin/migrations/install-pgvector
+ * Instala a extensão pgvector no PostgreSQL
+ */
+router.post('/admin/migrations/install-pgvector', async (req, res) => {
+  try {
+    await pool.query('CREATE EXTENSION IF NOT EXISTS vector');
+    
+    res.json({
+      success: true,
+      message: 'Extensão pgvector instalada com sucesso'
+    });
+  } catch (error: any) {
+    console.error('[Migrations] Erro ao instalar pgvector:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
