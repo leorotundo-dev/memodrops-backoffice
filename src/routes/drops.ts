@@ -372,37 +372,44 @@ Retorne um JSON array com este formato:
     const savedDrops = [];
     
     for (const drop of dropsData) {
-      // Criar ou buscar tópico
-      const topicResult = await query(`
-        INSERT INTO topics (name, subject_id, created_at)
-        SELECT $1, s.id, NOW()
-        FROM subjects s
-        INNER JOIN editals e ON s.edital_id = e.id
-        WHERE e.id = $2
-        AND LOWER(s.name) = LOWER($3)
-        ON CONFLICT (name, subject_id) DO NOTHING
-        RETURNING id
-      `, [drop.topic_name || 'Geral', editalId, subjectName]);
-
+      // Buscar ou criar tópico
       let topicId;
-      if (topicResult.rows.length > 0) {
-        topicId = topicResult.rows[0].id;
+      
+      // Primeiro, buscar tópico existente
+      const existingTopic = await query(`
+        SELECT t.id
+        FROM topics t
+        INNER JOIN subjects s ON t.subject_id = s.id
+        INNER JOIN editals e ON s.edital_id = e.id
+        WHERE e.id = $1
+        AND LOWER(s.name) = LOWER($2)
+        AND LOWER(t.name) = LOWER($3)
+      `, [editalId, subjectName, drop.topic_name || 'Geral']);
+      
+      if (existingTopic.rows.length > 0) {
+        topicId = existingTopic.rows[0].id;
       } else {
-        // Buscar tópico existente
-        const existingTopic = await query(`
-          SELECT t.id
-          FROM topics t
-          INNER JOIN subjects s ON t.subject_id = s.id
+        // Criar novo tópico
+        const newTopic = await query(`
+          INSERT INTO topics (name, subject_id, slug, created_at)
+          SELECT $1, s.id, $2, NOW()
+          FROM subjects s
           INNER JOIN editals e ON s.edital_id = e.id
-          WHERE e.id = $1
-          AND LOWER(s.name) = LOWER($2)
-          AND LOWER(t.name) = LOWER($3)
-        `, [editalId, subjectName, drop.topic_name || 'Geral']);
+          WHERE e.id = $3
+          AND LOWER(s.name) = LOWER($4)
+          RETURNING id
+        `, [
+          drop.topic_name || 'Geral',
+          (drop.topic_name || 'geral').toLowerCase().replace(/\s+/g, '-'),
+          editalId,
+          subjectName
+        ]);
         
-        if (existingTopic.rows.length > 0) {
-          topicId = existingTopic.rows[0].id;
+        if (newTopic.rows.length > 0) {
+          topicId = newTopic.rows[0].id;
         } else {
-          continue; // Skip se não conseguir criar/encontrar tópico
+          console.log('Não foi possível criar tópico para:', drop.topic_name);
+          continue; // Skip este drop
         }
       }
 
