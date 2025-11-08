@@ -59,6 +59,10 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 app.use(express.json());
 // Ping endpoint PRIMEIRO - sem dependências
+// Health check para Railway (sem /api)
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok' });
+});
 app.get('/api/ping', (req, res) => {
     res.json({ pong: true, timestamp: new Date().toISOString() });
 });
