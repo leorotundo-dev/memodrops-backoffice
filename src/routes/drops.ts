@@ -387,13 +387,16 @@ RETORNE APENAS UM JSON com este formato EXATO (sem texto adicional):
     let blueprintId;
     
     // Buscar harvest_item do edital
+    // Remover prefixo "Edital - " se existir
+    const searchTitle = edital.title.replace(/^Edital - /, '').substring(0, 50);
+    
     const harvestResult = await query(`
       SELECT hi.id
       FROM harvest_items hi
       WHERE hi.title LIKE '%' || $1 || '%'
       AND hi.status = 'processed'
       LIMIT 1
-    `, [edital.title.substring(0, 50)]);
+    `, [searchTitle]);
     
     if (harvestResult.rows.length > 0) {
       const harvestItemId = harvestResult.rows[0].id;
