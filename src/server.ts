@@ -50,23 +50,38 @@ if (process.env.NODE_ENV === 'production') {
   
   console.log('✅ Job de limpeza automática agendado (a cada 24h)');
 }
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-  console.log(`✅ Created uploads directory: ${uploadsDir}`);
-} else {
-  console.log(`✅ Uploads directory already exists: ${uploadsDir}`);
+try {
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+    console.log(`✅ Created uploads directory: ${uploadsDir}`);
+  } else {
+    console.log(`✅ Uploads directory already exists: ${uploadsDir}`);
+  }
+} catch (err) {
+  console.error(`⚠️ Erro ao criar diretório de uploads: ${uploadsDir}`, err);
+  console.log('⚠️ Continuando sem diretório de uploads...');
 }
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(express.json());
-// Serve static files from public directory
-const publicPath = process.env.NODE_ENV === 'production' ? 'dist/public' : 'public';
-app.use(express.static(publicPath));
+
+// Ping endpoint PRIMEIRO - sem dependências
+app.get('/api/ping', (req, res) => {
+  res.json({ pong: true, timestamp: new Date().toISOString() });
+});
 
 // Health check (detailed)
 app.use(healthRouter);
+
+// Serve static files from public directory
+const publicPath = process.env.NODE_ENV === 'production' ? 'dist/public' : 'public';
+try {
+  app.use(express.static(publicPath));
+} catch (err) {
+  console.error('[Static] Erro ao servir arquivos estáticos:', err);
+}
 
 // Dashboard route - serve index.html for /dashboard and /dashboard/
 app.get(['/dashboard', '/dashboard/'], (req, res) => {
