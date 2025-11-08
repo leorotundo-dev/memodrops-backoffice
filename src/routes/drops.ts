@@ -383,6 +383,57 @@ RETORNE APENAS UM JSON com este formato EXATO (sem texto adicional):
       });
     }
 
+    // Buscar ou criar exam_blueprint
+    let blueprintId;
+    
+    // Buscar harvest_item do edital
+    const harvestResult = await query(`
+      SELECT hi.id
+      FROM harvest_items hi
+      WHERE hi.title LIKE '%' || $1 || '%'
+      AND hi.status = 'processed'
+      LIMIT 1
+    `, [edital.title.substring(0, 50)]);
+    
+    if (harvestResult.rows.length > 0) {
+      const harvestItemId = harvestResult.rows[0].id;
+      
+      // Buscar blueprint existente
+      const blueprintResult = await query(`
+        SELECT id FROM exam_blueprints
+        WHERE harvest_item_id = $1
+        LIMIT 1
+      `, [harvestItemId]);
+      
+      if (blueprintResult.rows.length > 0) {
+        blueprintId = blueprintResult.rows[0].id;
+      } else {
+        // Criar novo blueprint
+        const newBlueprint = await query(`
+          INSERT INTO exam_blueprints (
+            harvest_item_id,
+            model,
+            prompt_version,
+            raw_response,
+            structured_data
+          ) VALUES ($1, $2, $3, $4, $5)
+          RETURNING id
+        `, [
+          harvestItemId,
+          'gpt-4.1-mini',
+          'v1.0',
+          JSON.stringify({}),
+          JSON.stringify({ edital_id: editalId, source: 'auto_generation' })
+        ]);
+        blueprintId = newBlueprint.rows[0].id;
+      }
+    } else {
+      return res.status(500).json({
+        success: false,
+        error: 'Harvest item não encontrado para este edital'
+      });
+    }
+
     // Salvar drops no banco
     const savedDrops = [];
     
@@ -475,7 +526,7 @@ RETORNE APENAS UM JSON com este formato EXATO (sem texto adicional):
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
         RETURNING id
       `, [
-        editalId, // blueprint_id
+        blueprintId, // blueprint_id
         subjectId,
         drop.content,
         'knowledge_pill',
