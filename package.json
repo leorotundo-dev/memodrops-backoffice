@@ -29,7 +29,7 @@
     "pg": "^8.11.3",
     "undici": "^7.16.0",
     "winston": "^3.18.3",
-    "zod": "^4.1.12"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

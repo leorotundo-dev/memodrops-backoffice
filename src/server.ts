@@ -71,6 +71,9 @@ try {
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Trust proxy - necessário para Railway e rate-limit
+app.set('trust proxy', 1);
+
 // Segurança: CORS
 const corsOptions = {
   origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',

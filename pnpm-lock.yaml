@@ -40,7 +40,7 @@ importers:
         version: 3.3.2
       openai:
         specifier: ^4.52.0
-        version: 4.104.0(zod@4.1.12)
+        version: 4.104.0(zod@3.23.8)
       pdf-lib:
         specifier: ^1.17.1
         version: 1.17.1
@@ -54,8 +54,8 @@ importers:
         specifier: ^3.18.3
         version: 3.18.3
       zod:
-        specifier: ^4.1.12
-        version: 4.1.12
+        specifier: ^3.23.8
+        version: 3.23.8
     devDependencies:
       '@types/cors':
         specifier: ^2.8.17
@@ -1090,8 +1090,8 @@ packages:
     resolution: {integrity: sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==}
     engines: {node: '>=6'}
 
-  zod@4.1.12:
-    resolution: {integrity: sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==}
+  zod@3.23.8:
+    resolution: {integrity: sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g==}
 
 snapshots:
 
@@ -1799,7 +1799,7 @@ snapshots:
     dependencies:
       fn.name: 1.1.0
 
-  openai@4.104.0(zod@4.1.12):
+  openai@4.104.0(zod@3.23.8):
     dependencies:
       '@types/node': 18.19.130
       '@types/node-fetch': 2.6.13
@@ -1809,7 +1809,7 @@ snapshots:
       formdata-node: 4.4.1
       node-fetch: 2.7.0
     optionalDependencies:
-      zod: 4.1.12
+      zod: 3.23.8
     transitivePeerDependencies:
       - encoding
 
@@ -2090,4 +2090,4 @@ snapshots:
 
   yn@3.1.1: {}
 
-  zod@4.1.12: {}
+  zod@3.23.8: {}
