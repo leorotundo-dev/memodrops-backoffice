@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { DropType } from '../config/goldRule';
+import { DropType } from '../config/goldRule.js';
 
 export interface Drop {
   id: number;

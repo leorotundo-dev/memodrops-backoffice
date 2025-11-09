@@ -36,6 +36,7 @@ import qaRouter from './routes/qa.js';
 import pedagogyRouter from './routes/pedagogy.js';
 import ragRouter from './routes/rag.js';
 import adminMigrationsRouter from './routes/admin-migrations.js';
+import debugRouter from './routes/debug.js';
 
 // Criar diretório para uploads se não existir
 // Usar /data/uploads para persistência via Railway Volume
@@ -108,6 +109,9 @@ app.get('/api/ping', (req, res) => {
 
 // Health check (detailed)
 app.use(healthRouter);
+
+// Debug endpoints (MUST be early to capture startup logs)
+app.use(debugRouter);
 
 // Serve static files from public directory
 const publicPath = process.env.NODE_ENV === 'production' ? 'dist/public' : 'public';
